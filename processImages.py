@@ -33,7 +33,8 @@ def show_image(image):
 def load_mask(timepoint):
     mask = sio.loadmat('Training Data/Masks/t_' + str(format(timepoint, '03d')) + '.mat')
     mask = (mask['LAB'] != 0)*1
-    return mask#.astype(double)
+    x = mask[8:-8, 184:-184]#.astype(double)
+    return x#.astype(double)
     
 def num_images():
     return len(os.listdir('Training Data/Masks'))
@@ -52,6 +53,7 @@ class YeastSegmentationDataset(Dataset):
         return length
 
     def __getitem__(self,idx):
+        idx+=1
         image = load_image(idx)
         mask = load_mask(idx)    
         #sample = {'image': image, 'mask': mask}

@@ -28,5 +28,6 @@ class Net(nn.Module):
         x = self.up3(x, x3)
         x = self.up4(x, x2)
         x = self.output(x, x1)
+        return x
 
 
