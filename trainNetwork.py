@@ -41,10 +41,10 @@ for epoch in range(2):  # loop over the dataset multiple times
         # forward + backward + optimize
         outputs = net(inputs.float())
         #print(outputs.detach().numpy().shape)
-        #bg = outputs.detach().numpy()[0,0,:,:]
+        bg = outputs.detach().numpy()[0,0,:,:]
         cl = outputs.detach().numpy()[0,1,:,:]
         mk = numpy.zeros((1024,1024))
-        mk[numpy.nonzero(cl)] = 1
+        mk[numpy.nonzero(cl>bg)] = 1
         print(cl)
         imageio.imwrite('./' + str(i) + '.jpg', mk)
         print('outputs')
