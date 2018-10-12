@@ -4,16 +4,15 @@ from scipy import ndimage
 from processImages import show_image
 import matplotlib.pyplot as plt
 
+
 def load_mask(timepoint):
     mask = sio.loadmat('Training Data/Masks/t_' + str(format(timepoint, '03d')) + '.mat')
-    #print(mask)
-    x = mask['LAB'][8:-8, 184:-184]#.astype(double)
-    return x#.astype(double)
+    x = mask['LAB'][8:-8, 184:-184]
+    return x
 
-def getLossMatrix():
+def getLossMatrix(imageID):
 
-    gt = load_mask(10)
-    print(np.unique(gt))
+    gt = load_mask(imageID)
     gt2 = ~(gt==0)
     uvals=np.unique(gt2)
     wmp=np.zeros(uvals.shape)
@@ -22,7 +21,6 @@ def getLossMatrix():
 
     wmp=wmp / np.max(wmp)
 
-    print(wmp)
     wc=np.zeros(gt.shape)
     for uv in range(uvals.shape[0]):
         wc[gt2==uvals[uv]]=wmp[uv]
@@ -44,8 +42,13 @@ def getLossMatrix():
 
         bwgt=w0 * np.exp((-(np.power((d1+d2),2))) / (2*sigma) ) * (gt==0)
         weight = wc + bwgt
-        show_image(bwgt)
-        show_image(weight)
-        show_image(wc)
+    #show_image(bwgt)
+    #show_image(weight)
+    #show_image(wc)
 
-getLossMatrix()
+    return weight
+
+#for id in range(1,51):
+weight = getLossMatrix(51)
+print(weight)
+np.save('loss_weight_map' + str(51), weight)

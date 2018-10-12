@@ -21,7 +21,7 @@ def load_image(timepoint):
     image2 = numpy.true_divide(image2 - image2.min(), image2.max() - image2.min())
     #Stack the 3 zstacks into a 3 channels of an rgb image
     image3 = numpy.dstack((image,image1,image2))
-    image3 = numpy.reshape(image3, (3,1040,1392))
+    image3 = numpy.reshape(image3, (3,1040,1392))    
     x = image3[0:3, 8:-8, 184:-184]#.astype(double)
     return x
 def show_image(image):
@@ -38,6 +38,9 @@ def load_mask(timepoint):
     
 def num_images():
     return len(os.listdir('Training Data/Masks'))
+
+def load_loss_map(timepoint):
+    return numpy.load('Loss Weight Maps/loss_weight_map' + str(timepoint) + '.npy')
 
 
 #Define Dataset Class
@@ -57,9 +60,15 @@ class YeastSegmentationDataset(Dataset):
         image = load_image(idx)
         mask = load_mask(idx)    
         #sample = {'image': image, 'mask': mask}
-        sample = image, mask
+        
+        weight_loss_matrix = load_loss_map(idx)
+        sample = image, mask, weight_loss_matrix
 
         if self.transform:
             sample = self.transform(sample)
 
         return sample
+
+
+
+
