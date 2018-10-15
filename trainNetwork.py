@@ -15,6 +15,8 @@ from weightedLoss import WeightedCrossEntropyLoss
 yeast_dataset = YeastSegmentationDataset()
 
 net = Net()
+device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+net.to(device)
 
 optimizer = optim.SGD(net.parameters(),
                         lr=0.1,
@@ -23,10 +25,10 @@ optimizer = optim.SGD(net.parameters(),
 
 criterion = WeightedCrossEntropyLoss()#nn.CrossEntropyLoss()#
 
-trainloader = torch.utils.data.DataLoader(yeast_dataset, batch_size=1,
+trainloader = torch.utils.data.DataLoader(yeast_dataset, batch_size=3,
                                           shuffle=True, num_workers=0)
 
-testloader = torch.utils.data.DataLoader(yeast_dataset, batch_size=1,
+testloader = torch.utils.data.DataLoader(yeast_dataset, batch_size=3,
                                          shuffle=False, num_workers=0)
 
 classes = ('background','cell')
@@ -36,7 +38,7 @@ for epoch in range(2):  # loop over the dataset multiple times
     for i, data in enumerate(trainloader, 0):
         # get the inputs
         inputs, labels, loss_weight_map = data
-        ####inputs, labels = inputs.to(device), labels.to(device)
+        inputs, labels, loss_weight_map = inputs.to(device), labels.to(device), loss_weight_map.to(device)
         # zero the parameter gradients
         optimizer.zero_grad()
 
@@ -44,13 +46,13 @@ for epoch in range(2):  # loop over the dataset multiple times
         outputs = net(inputs.float())
 
         #print(outputs.detach().numpy().shape)
-        bg = outputs.detach().numpy()[0,0,:,:]
-        cl = outputs.detach().numpy()[0,1,:,:]
-        mk = numpy.zeros((512,512))
+        #bg = outputs.detach().numpy()[0,0,:,:]
+        #cl = outputs.detach().numpy()[0,1,:,:]
+        #mk = numpy.zeros((512,512))
         
-        print(cl)
-        print(bg)
-        imageio.imwrite('outputs/' + str(i) + '.png', mk)
+        #print(cl)
+        #print(bg)
+        #imageio.imwrite('outputs/' + str(i) + '.png', mk)
         print('outputs')
 
 

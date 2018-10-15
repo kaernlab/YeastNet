@@ -44,6 +44,14 @@ def load_loss_map(timepoint):
     weightmap = numpy.load('Training Data/Loss Weight Maps/loss_weight_map' + str(timepoint) + '.npy')
     return weightmap[256:-256, 256:-256]
 
+def random_sample(image, mask, weight_loss_matrix):
+    x,y = int(numpy.random.randint((mask.shape[0]-161), size=1)), int(numpy.random.randint((mask.shape[0]-161), size=1))
+    #print(x.dtype, y.dtype)
+    image = image[0:3,x:x+160,y:y+160]
+    mask = mask[x:x+160,y:y+160]
+    weight_loss_matrix = weight_loss_matrix[x:x+160,y:y+160]
+    return image, mask, weight_loss_matrix
+
 
 #Define Dataset Class
 class YeastSegmentationDataset(Dataset):
@@ -64,7 +72,8 @@ class YeastSegmentationDataset(Dataset):
         #sample = {'image': image, 'mask': mask}
         
         weight_loss_matrix = load_loss_map(idx)
-        sample = image, mask, weight_loss_matrix
+        #sample = image, mask, weight_loss_matrix
+        sample = random_sample(image, mask, weight_loss_matrix)
 
         if self.transform:
             sample = self.transform(sample)
