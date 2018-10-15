@@ -22,7 +22,7 @@ def load_image(timepoint):
     #Stack the 3 zstacks into a 3 channels of an rgb image
     image3 = numpy.dstack((image,image1,image2))
     image3 = numpy.reshape(image3, (3,1040,1392))    
-    x = image3[0:3, 8:-8, 184:-184]#.astype(double)
+    x = image3[0:3, 264:-264, 440:-440]#.astype(double)
     return x
 def show_image(image):
     #Display image
@@ -33,14 +33,16 @@ def show_image(image):
 def load_mask(timepoint):
     mask = sio.loadmat('Training Data/Masks/t_' + str(format(timepoint, '03d')) + '.mat')
     mask = (mask['LAB'] != 0)*1
-    x = mask[8:-8, 184:-184]#.astype(double)
+    #x = mask[8:-8, 184:-184]#.astype(double)
+    x = mask[264:-264, 440:-440]
     return x#.astype(double)
     
 def num_images():
     return len(os.listdir('Training Data/Masks'))
 
 def load_loss_map(timepoint):
-    return numpy.load('Loss Weight Maps/loss_weight_map' + str(timepoint) + '.npy')
+    weightmap = numpy.load('Training Data/Loss Weight Maps/loss_weight_map' + str(timepoint) + '.npy')
+    return weightmap[256:-256, 256:-256]
 
 
 #Define Dataset Class

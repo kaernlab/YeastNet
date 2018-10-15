@@ -21,7 +21,7 @@ optimizer = optim.SGD(net.parameters(),
                         momentum=0.9,
                         weight_decay=0.0005)
 
-criterion = WeightedCrossEntropyLoss()
+criterion = WeightedCrossEntropyLoss()#nn.CrossEntropyLoss()#
 
 trainloader = torch.utils.data.DataLoader(yeast_dataset, batch_size=1,
                                           shuffle=True, num_workers=0)
@@ -46,10 +46,11 @@ for epoch in range(2):  # loop over the dataset multiple times
         #print(outputs.detach().numpy().shape)
         bg = outputs.detach().numpy()[0,0,:,:]
         cl = outputs.detach().numpy()[0,1,:,:]
-        mk = numpy.zeros((1024,1024))
-        mk[numpy.nonzero(cl>bg)] = 1
+        mk = numpy.zeros((512,512))
+        
         print(cl)
-        imageio.imwrite('./' + str(i) + '.jpg', mk)
+        print(bg)
+        imageio.imwrite('outputs/' + str(i) + '.png', mk)
         print('outputs')
 
 
@@ -62,10 +63,9 @@ for epoch in range(2):  # loop over the dataset multiple times
 
         # print statistics
         running_loss += loss.item()
-        if i % 5 == 4:    # print every 5 mini-batches
-            print('[%d, %5d] loss: %.3f' %
-                  (epoch + 1, i + 1, running_loss / 5))
-            running_loss = 0.0
+        #if i % 5 == 4:    # print every 5 mini-batches
+        print('[%d, %5d] loss: %.3f' % (epoch + 1, i + 1, running_loss / 5))
+        running_loss = 0.0
 
 print('Finished Training')
 

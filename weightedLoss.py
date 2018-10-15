@@ -3,6 +3,8 @@ import torch.nn.functional as F
 import torch
 
 import numpy as np
+import matplotlib.pyplot as plt
+from processImages import show_image
 
 class WeightedCrossEntropyLoss(nn.modules.loss._WeightedLoss):
     def __init__(self, weight=None, size_average=None, ignore_index=-100,
@@ -25,11 +27,22 @@ class WeightedCrossEntropyLoss(nn.modules.loss._WeightedLoss):
 
 
         px = np.zeros(target[0].shape)
-        px1 = input[0][0]
-        px2 = input[0][1]
-        #px1[target[0]==1] = 0
-        #px2[target[0]==0] = 0
+        #px3 = np.zeros(target[0].shape)
+        #px4 = np.zeros(target[0].shape)
+        #px1 = input[0][0]
+        #px2 = input[0][1]
+        x=target[0]==0
+        y=target[0]==1
+        px1 = x.float() * input[0][0, :, :]
+        px2 = y.float() * input[0][1, :, :]
+        #print(px1,px2,px1.shape,px2.shape)
         px = px1+px2
+        #show_image(px1.detach().numpy())
+        #show_image(px2.detach().numpy())
+        #show_image(px.detach().numpy())
 
-        x = weight_map[0]*torch.log(px.double())
+
+        #x = weight_map[0]*-(torch.log(px.double()))
+        x = weight_map[0]*-(torch.log(px.double())) / px.numel()
+        #show_image(x.detach().numpy())
         return x.sum().sum()
