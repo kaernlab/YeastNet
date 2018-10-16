@@ -15,21 +15,29 @@ def load_image(timepoint):
     image = imageio.imread('Training Data/Images/z1_t_000_000_' + str(format(timepoint, '03d')) + '_BF.tif')
     image1 = imageio.imread('Training Data/Images/z2_t_000_000_' + str(format(timepoint, '03d')) + '_BF.tif')
     image2 = imageio.imread('Training Data/Images/z3_t_000_000_' + str(format(timepoint, '03d')) + '_BF.tif')
-    #Rescale images to 0-1
-    image = numpy.true_divide(image - image.min(), image.max() - image.min())
-    image1 = numpy.true_divide(image1 - image1.min(), image1.max() - image1.min())
-    image2 = numpy.true_divide(image2 - image2.min(), image2.max() - image2.min())
+    #Rescale images to 0-1 and zero-center
+    image = normalize_image(image)
+    image1 = normalize_image(image1)
+    image2 = normalize_image(image2)
     #Stack the 3 zstacks into a 3 channels of an rgb image
     image3 = numpy.dstack((image,image1,image2))
     image3 = numpy.reshape(image3, (3,1040,1392))    
-    x = image3[0:3, 264:-264, 440:-440]#.astype(double)
+    x = image3#[0:3, 264:-264, 440:-440]#.astype(double)
     return x
+
 def show_image(image):
     #Display image
     plt.figure()
     plt.imshow(image)  
     plt.show()
 
+def normalize_image(image):
+    #print(image.mean())
+    image =  image - image.mean()
+    #print(image.mean())
+    image = numpy.true_divide(image - image.min(), image.max() - image.min())
+    #print(image.mean())
+    return image
 def load_mask(timepoint):
     mask = sio.loadmat('Training Data/Masks/t_' + str(format(timepoint, '03d')) + '.mat')
     mask = (mask['LAB'] != 0)*1

@@ -7,6 +7,7 @@ from torch import optim
 
 import numpy
 import imageio
+import tensorboardX as tbX
 
 from processImages import YeastSegmentationDataset
 from defineNetwork import Net
@@ -14,6 +15,7 @@ from weightedLoss import WeightedCrossEntropyLoss
 
 yeast_dataset = YeastSegmentationDataset()
 
+writer = tbX.SummaryWriter()#log_dir="./logs")
 net = Net()
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 net.to(device)
@@ -32,10 +34,11 @@ testloader = torch.utils.data.DataLoader(yeast_dataset, batch_size=3,
                                          shuffle=False, num_workers=0)
 
 classes = ('background','cell')
-for epoch in range(2):  # loop over the dataset multiple times
-
+for epoch in range(100):  # loop over the dataset multiple times
+    
     running_loss = 0.0
     for i, data in enumerate(trainloader, 0):
+        
         # get the inputs
         inputs, labels, loss_weight_map = data
         inputs, labels, loss_weight_map = inputs.to(device), labels.to(device), loss_weight_map.to(device)
@@ -62,7 +65,8 @@ for epoch in range(2):  # loop over the dataset multiple times
         print('loss2')
         optimizer.step()
         print('optimezer')
-
+        writer.add_scalar('loss', loss.item(), i + (epoch)*17)
+        print(loss.item())
         # print statistics
         running_loss += loss.item()
         #if i % 5 == 4:    # print every 5 mini-batches
@@ -70,4 +74,7 @@ for epoch in range(2):  # loop over the dataset multiple times
         running_loss = 0.0
 
 print('Finished Training')
+
+#writer.export_scalars_to_json("./logs/all_scalars.json")
+writer.close()
 
