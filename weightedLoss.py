@@ -5,6 +5,7 @@ import torch
 import numpy as np
 import matplotlib.pyplot as plt
 from processImages import show_image
+import pdb
 
 class WeightedCrossEntropyLoss(nn.modules.loss._WeightedLoss):
     def __init__(self, weight=None, size_average=None, ignore_index=-100,
@@ -19,7 +20,7 @@ class WeightedCrossEntropyLoss(nn.modules.loss._WeightedLoss):
     def cross_entropy(self, input, target, weight_map, weight=None, size_average=None, ignore_index=-100, reduce=None, reduction='elementwise_mean'):
         if size_average is not None or reduce is not None:
             reduction = F._Reduction.legacy_get_string(size_average, reduce)
-        return self.nll_loss(F.softmax(input, 1), target, weight_map, weight, None, ignore_index, None, reduction) 
+        return self.nll_loss(F.softmax(input, 1), target, weight_map, weight, None,    ignore_index, None, reduction) 
 
     def nll_loss(self, input, target, weight_map, weight=None, size_average=None, ignore_index=-100,
              reduce=None, reduction='elementwise_mean'):
@@ -45,4 +46,6 @@ class WeightedCrossEntropyLoss(nn.modules.loss._WeightedLoss):
         #x = weight_map[0]*-(torch.log(px.double()))
         x = weight_map[0]*-(torch.log(px.double())) / px.numel()
         #show_image(x.detach().numpy())
+
+        
         return x.sum().sum()

@@ -19,11 +19,27 @@ def load_image(timepoint):
     image = normalize_image(image)
     image1 = normalize_image(image1)
     image2 = normalize_image(image2)
+    image, image1, image2 = image[264:-264, 440:-440], image1[264:-264, 440:-440], image2[264:-264, 440:-440]
     #Stack the 3 zstacks into a 3 channels of an rgb image
     image3 = numpy.dstack((image,image1,image2))
-    image3 = numpy.reshape(image3, (3,1040,1392))    
-    x = image3#[0:3, 264:-264, 440:-440]#.astype(double)
+    #show_image(image3)
+    #image3 = numpy.reshape(image3, (3,512,512))  
+    x = convert_image(image3, reverse=False)
+    #x = image3[0:3, 264:-264, 440:-440]#.astype(double)
+    #show_image(convert_image(x))
+    print(x.shape)
+
     return x
+
+def convert_image(image, reverse=True):
+    if reverse:
+        image = numpy.swapaxes(image,1,2)  
+        image = numpy.swapaxes(image,0,2)
+    else:
+        image = numpy.swapaxes(image,0,2)
+        image = numpy.swapaxes(image,1,2)  
+    return image
+        
 
 def show_image(image):
     #Display image
@@ -38,6 +54,7 @@ def normalize_image(image):
     image = numpy.true_divide(image - image.min(), image.max() - image.min())
     #print(image.mean())
     return image
+    
 def load_mask(timepoint):
     mask = sio.loadmat('Training Data/Masks/t_' + str(format(timepoint, '03d')) + '.mat')
     mask = (mask['LAB'] != 0)*1
@@ -80,8 +97,8 @@ class YeastSegmentationDataset(Dataset):
         #sample = {'image': image, 'mask': mask}
         
         weight_loss_matrix = load_loss_map(idx)
-        #sample = image, mask, weight_loss_matrix
-        sample = random_sample(image, mask, weight_loss_matrix)
+        sample = image, mask, weight_loss_matrix
+        #sample = random_sample(image, mask, weight_loss_matrix)
 
         if self.transform:
             sample = self.transform(sample)
