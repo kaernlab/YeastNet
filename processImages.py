@@ -10,36 +10,10 @@ import torchvision
 
 
 #Utils functions
-def load_image(timepoint):
-    #Load all z stacks
-    image = imageio.imread('Training Data/Images/z1_t_000_000_' + str(format(timepoint, '03d')) + '_BF.tif')
-    image1 = imageio.imread('Training Data/Images/z2_t_000_000_' + str(format(timepoint, '03d')) + '_BF.tif')
-    image2 = imageio.imread('Training Data/Images/z3_t_000_000_' + str(format(timepoint, '03d')) + '_BF.tif')
-    #Rescale images to 0-1 and zero-center
-    image = normalize_image(image)
-    image1 = normalize_image(image1)
-    image2 = normalize_image(image2)
-    image, image1, image2 = image[264:-264, 440:-440], image1[264:-264, 440:-440], image2[264:-264, 440:-440]
-    #Stack the 3 zstacks into a 3 channels of an rgb image
-    image3 = numpy.dstack((image,image1,image2))
-    #show_image(image3)
-    #image3 = numpy.reshape(image3, (3,512,512))  
-    x = convert_image(image3, reverse=False)
-    #x = image3[0:3, 264:-264, 440:-440]#.astype(double)
-    #show_image(convert_image(x))
-    print(x.shape)
-
-    return x
-
-def convert_image(image, reverse=True):
-    if reverse:
-        image = numpy.swapaxes(image,1,2)  
-        image = numpy.swapaxes(image,0,2)
-    else:
-        image = numpy.swapaxes(image,0,2)
-        image = numpy.swapaxes(image,1,2)  
-    return image
-        
+def load_image(timepoint, z_stack):
+    title = 'Training Data/Images/z' + str(z_stack) + '_t_000_000_' + str(format(timepoint, '03d')) + '_BF.tif'
+    image = imageio.imread(title) 
+    return image[:,:,numpy.newaxis].astype(numpy.double)
 
 def show_image(image):
     #Display image
@@ -47,63 +21,64 @@ def show_image(image):
     plt.imshow(image)  
     plt.show()
 
-def normalize_image(image):
-    #print(image.mean())
-    image =  image - image.mean()
-    #print(image.mean())
-    image = numpy.true_divide(image - image.min(), image.max() - image.min())
-    #print(image.mean())
-    return image
-    
 def load_mask(timepoint):
     mask = sio.loadmat('Training Data/Masks/t_' + str(format(timepoint, '03d')) + '.mat')
     mask = (mask['LAB'] != 0)*1
-    #x = mask[8:-8, 184:-184]#.astype(double)
-    x = mask[264:-264, 440:-440]
-    return x#.astype(double)
+    return mask[:,:,numpy.newaxis]
     
+def centre_crop(image, new_size):
+    if torch.is_tensor(image):
+        c,h,w = image.shape
+        image = image[:, h//2 - new_size//2 : h//2 + new_size//2, w//2 - new_size//2 : w//2 + new_size//2 ]
+    else:
+        h,w,c = image.shape
+        image = image[h//2 - new_size//2 : h//2 + new_size//2, w//2 - new_size//2 : w//2 + new_size//2, :]
+    return image
+
 def num_images():
-    return len(os.listdir('Training Data/Masks'))
+    return len(os.listdir('Training Data/Images'))
 
 def load_loss_map(timepoint):
     weightmap = numpy.load('Training Data/Loss Weight Maps/loss_weight_map' + str(timepoint) + '.npy')
-    return weightmap[256:-256, 256:-256]
+    return weightmap[:,:,numpy.newaxis].astype(numpy.float32)
 
 def random_sample(image, mask, weight_loss_matrix):
     x,y = int(numpy.random.randint((mask.shape[0]-161), size=1)), int(numpy.random.randint((mask.shape[0]-161), size=1))
-    #print(x.dtype, y.dtype)
-    image = image[0:3,x:x+160,y:y+160]
+    image = image[x:x+160,y:y+160]
     mask = mask[x:x+160,y:y+160]
     weight_loss_matrix = weight_loss_matrix[x:x+160,y:y+160]
     return image, mask, weight_loss_matrix
 
+def normalize_grayscale(image, mean, std):
+    image = (image - mean) / std
+    image = (image - image.min()) / image.max()
+    return image
 
 #Define Dataset Class
 class YeastSegmentationDataset(Dataset):
 
-    def __init__(self, transform=None):
-        #self.segmentation_masks = [load_mask(i+1) for i in range(50)]
-        #self.images = [load_image(i+1) for i in range(50)]
-        self.transform = transform
+    def __init__(self, transform=None, crop_size = 512):
+        self.CenterCrop = centre_crop
+        self.Normalize = normalize_grayscale#torchvision.transforms.Normalize([0.5], [0.5])
+        self.ToTensor = torchvision.transforms.ToTensor()
+        self.crop_size = crop_size
 
     def __len__(self):
-        length = num_images()
-        return length
+        return num_images()
 
     def __getitem__(self,idx):
+        z_stack = idx // 51 + 1
         idx+=1
-        image = load_image(idx)
-        mask = load_mask(idx)    
-        #sample = {'image': image, 'mask': mask}
+        if (idx % 51 == 0):
+            timepoint = 51
+        else:
+            timepoint = idx % 51
+        mask = self.CenterCrop(load_mask(timepoint),self.crop_size)
+        weight_loss_matrix = self.CenterCrop(load_loss_map(timepoint), self.crop_size)
+        image = self.ToTensor(load_image(timepoint, z_stack))
+        image = self.CenterCrop(self.Normalize(image, image.mean(), image.std()), self.crop_size)
         
-        weight_loss_matrix = load_loss_map(idx)
-        sample = image, mask, weight_loss_matrix
-        #sample = random_sample(image, mask, weight_loss_matrix)
-
-        if self.transform:
-            sample = self.transform(sample)
-
-        return sample
+        return image, mask, weight_loss_matrix
 
 
 

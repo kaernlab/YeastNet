@@ -15,7 +15,7 @@ from processImages import YeastSegmentationDataset
 from defineNetwork import Net
 from weightedLoss import WeightedCrossEntropyLoss
 
-yeast_dataset = YeastSegmentationDataset()
+yeast_dataset = YeastSegmentationDataset(crop_size = 256)
 
 writer = tbX.SummaryWriter()#log_dir="./logs")
 net = Net()
@@ -45,17 +45,17 @@ for epoch in range(10):  # loop over the dataset multiple times
         best_model_loss = 10
 
         # Get inputs
-        inputs, labels, loss_weight_map = data
-        inputs, labels, loss_weight_map = inputs.to(device), labels.to(device), loss_weight_map.to(device)
+        training_image, labels, loss_weight_map = data
+        training_image, labels, loss_weight_map = training_image.to(device), labels.to(device), loss_weight_map.to(device)
 
         # zero the parameter gradients
         optimizer.zero_grad()
         # Forward Pass
-        outputs = net(inputs.float())
+        outputs = net(training_image.float())
         print('Forward Pass')
 
         # Write Graph
-        writer.add_graph(net, inputs.float())
+        writer.add_graph(net, training_image.float())
 
         # Output Image
         #print(outputs.detach().numpy().shape)
@@ -65,8 +65,10 @@ for epoch in range(10):  # loop over the dataset multiple times
         mk = (cl>bg)*1
         print(mk)
         imageio.imwrite('outputs/' + str(iteration) + 'Pred.png', mk.astype(float))
-        imageio.imwrite('outputs/' + str(iteration) + 'True.png', pi.convert_image(inputs[0].cpu().detach().numpy()))
-        
+        imageio.imwrite('outputs/' + str(iteration) + 'IMG.png', training_image[0,0,:,:].cpu().detach().numpy())
+        #pdb.set_trace()
+        imageio.imwrite('outputs/' + str(iteration) + 'True.png', labels[0,:,:,0].cpu().detach().numpy())
+
         # Calculate Loss
         loss = criterion(outputs, labels.long(), loss_weight_map)
         print('Loss Calculated')

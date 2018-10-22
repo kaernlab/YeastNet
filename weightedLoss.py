@@ -42,9 +42,9 @@ class WeightedCrossEntropyLoss(nn.modules.loss._WeightedLoss):
         #show_image(px2.detach().numpy())
         #show_image(px.detach().numpy())
 
-
+        #print(weight_map,px, )
         #x = weight_map[0]*-(torch.log(px.double()))
-        x = weight_map[0]*-(torch.log(px.double())) / px.numel()
+        x = weight_map[0]*-(torch.log(px)) / px.numel() #removed float casting on px
         #show_image(x.detach().numpy())
 
         

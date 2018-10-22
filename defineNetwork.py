@@ -5,7 +5,7 @@ class Net(nn.Module):
     def __init__(self):
         super(Net, self).__init__()
 
-        self.input = inputConv(3,64)
+        self.input = inputConv(1,64)
         self.down1 = down(64,128)
         self.down2 = down(128,256)
         self.down3 = down(256,512)
