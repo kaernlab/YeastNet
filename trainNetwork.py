@@ -15,7 +15,7 @@ from processImages import YeastSegmentationDataset
 from defineNetwork import Net
 from weightedLoss import WeightedCrossEntropyLoss
 
-yeast_dataset = YeastSegmentationDataset(crop_size = 256)
+yeast_dataset = YeastSegmentationDataset(crop_size = 512)
 
 writer = tbX.SummaryWriter()#log_dir="./logs")
 net = Net()
@@ -41,7 +41,7 @@ for epoch in range(10):  # loop over the dataset multiple times
     running_loss = 0.0
     for i, data in enumerate(trainloader, 0):
         # Total iteration
-        iteration = (1 + i + (epoch)*51)
+        iteration = (1 + i)# + (epoch)*51)
         best_model_loss = 10
 
         # Get inputs
@@ -86,8 +86,8 @@ for epoch in range(10):  # loop over the dataset multiple times
         print('[%d, %d, %5d] loss: %.5f' % (iteration, epoch + 1, i + 1, loss.item()))
 
         # Save Model 
-        #if best_model_loss>loss.item():
-            #torch.save(net.state_dict(),  "model.pt")
+        if best_model_loss>loss.item():
+            torch.save(net.state_dict(),  "model.pt")
 
 print('Finished Training')
 #pdb.set_trace()
