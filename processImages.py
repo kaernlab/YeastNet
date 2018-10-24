@@ -59,9 +59,11 @@ class YeastSegmentationDataset(Dataset):
 
     def __init__(self, transform=None, crop_size = 512):
         self.CenterCrop = centre_crop
-        self.Normalize = normalize_grayscale#torchvision.transforms.Normalize([0.5], [0.5])
+        self.Normalize = normalize_grayscale
         self.ToTensor = torchvision.transforms.ToTensor()
         self.crop_size = crop_size
+        self.id = os.listdir('./Training Data/Images/')
+
 
     def __len__(self):
         return num_images()
@@ -73,6 +75,7 @@ class YeastSegmentationDataset(Dataset):
             timepoint = 51
         else:
             timepoint = idx % 51
+            
         mask = self.CenterCrop(load_mask(timepoint),self.crop_size)
         weight_loss_matrix = self.CenterCrop(load_loss_map(timepoint), self.crop_size)
         image = self.ToTensor(load_image(timepoint, z_stack))
