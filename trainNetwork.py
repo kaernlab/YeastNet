@@ -34,11 +34,10 @@ device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 net.to(device)
 net.load_state_dict(torch.load("good_model.pt"))
 
-
 ## Instantiate Training and Validation DataLoaders
 trainDataSet = YeastSegmentationDataset(trainingIDs, crop_size = 128)
-trainLoader = torch.utils.data.DataLoader(trainDataSet, batch_size=4,
-                                          shuffle=True, num_workers=0)
+trainLoader = torch.utils.data.DataLoader(trainDataSet, batch_size=1,
+                                          shuffle=False, num_workers=0)
 
 testDataSet = YeastSegmentationDataset(testIDs, crop_size = 512)
 testLoader = torch.utils.data.DataLoader(testDataSet, batch_size=1,
@@ -46,13 +45,13 @@ testLoader = torch.utils.data.DataLoader(testDataSet, batch_size=1,
 
 
 ## Set Training hyperparameters/conditions
-optimizer = optim.SGD(net.parameters(), lr=0.000001)#, momentum=0.9, weight_decay=0.0005)
+optimizer = optim.SGD(net.parameters(), lr=0.1)#, momentum=0.9, weight_decay=0.0005)
 criterion = WeightedCrossEntropyLoss()#nn.CrossEntropyLoss()#
 classes = ('background','cell')
 iteration = 0
 
-# Epoch Loop: first loops over batches, then over validation set
-for epoch in range(100):  
+# Epoch Loop: first loops over batches, then over v alidation set
+for epoch in range(10):  
     
     ## Batch Loop
     for i, data in enumerate(trainLoader, 0):
@@ -75,21 +74,26 @@ for epoch in range(100):
 
         ## Calculate and Write Loss
         loss = criterion(outputs, mask.long(), lossWeightMap)
-        print('Loss Calculated')
+        print('Loss Calculated:', loss.item())
         writer.add_scalar('loss', loss.item(), iteration)
-
+        
         ## Backpropagate Loss
         loss.backward()
         print('Backpropagation Done')
 
+        for param in net.parameters():
+            print(param.grad.data.sum())
+        
+        pdb.set_trace()
         ## Update Parameters
         optimizer.step()
         print('optimizer')
 
 
     ## Epoch validation
-    val_loss = valNet.validate(net, device, testLoader, criterion)
-    print('[%d, %d] loss: %.5f' % (iteration, epoch + 1, val_loss))
+    #print('Validating.... Please Hold')
+    #val_loss = valNet.validate(net, device, testLoader, criterion, saveImages=True)
+    #print('[%d, %d] loss: %.5f' % (iteration, epoch + 1, val_loss))
     
     ## Save Model 
     #if save_at_cp:
