@@ -13,7 +13,7 @@ from weightedLoss import WeightedCrossEntropyLoss
 def validate(net, device, testLoader, criterion, saveImages = False):
 
     ## Run net without regularization techniques
-    #net.eval()
+    net.eval()
 
     ## Loss Sum accumulator for output
     runningLoss = 0
@@ -31,7 +31,7 @@ def validate(net, device, testLoader, criterion, saveImages = False):
         ## Calculate the Loss for the batch
         loss = criterion(outputs, mask.long(), lossWeightMap)
         runningLoss += loss.item()
-        print(loss.item())
+        #print(loss.item())
         ## Output Images
         if saveImages:
             bg = outputs.cpu().detach().numpy()[0,0,:,:]
