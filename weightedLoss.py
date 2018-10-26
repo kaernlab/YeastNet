@@ -26,25 +26,26 @@ class WeightedCrossEntropyLoss(nn.modules.loss._WeightedLoss):
              reduce=None, reduction='elementwise_mean'):
         #Needs to output 
 
-
-        px = np.zeros(target[0].shape)
+        weight_map = weight_map[0,:,:,0]
+        target = target[0,:,:,0]
+        input = input[0]
+        px = np.zeros(target.shape)
         #px3 = np.zeros(target[0].shape)
         #px4 = np.zeros(target[0].shape)
         #px1 = input[0][0]
         #px2 = input[0][1]
-        x=target[0]==0
-        y=target[0]==1
-        px1 = x.float() * input[0][0, :, :]
-        px2 = y.float() * input[0][1, :, :]
+        x=target==0
+        y=target==1
+        px1 = x.float() * input[0, :, :]
+        px2 = y.float() * input[1, :, :]
         #print(px1,px2,px1.shape,px2.shape)
         px = px1+px2
         #show_image(px1.detach().numpy())
         #show_image(px2.detach().numpy())
         #show_image(px.detach().numpy())
-
         #print(weight_map,px, )
         #x = weight_map[0]*-(torch.log(px.double()))
-        x = weight_map[0]*-(torch.log(px)) / px.numel() #removed float casting on px
+        x = weight_map*-(torch.log(px)) / px.numel() #removed float casting on px
         #show_image(x.detach().numpy())
 
         

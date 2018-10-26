@@ -22,9 +22,9 @@ class up(nn.Module):
     def __init__(self, input_depth, output_depth):
         super(up, self).__init__()
         self.conv = nn.Sequential(
-            nn.Conv2d(input_depth,output_depth, 3, padding=1), 
+            nn.Conv2d(input_depth,output_depth, 3, padding=1), #1024 -> 512
             nn.ReLU(inplace=True),
-            nn.Conv2d(output_depth,output_depth, 3,padding=1),
+            nn.Conv2d(output_depth,output_depth, 3,padding=1), #512 -> 512
             nn.ReLU(inplace=True),
             nn.ConvTranspose2d(output_depth, output_depth // 2, 2, stride=2))
 
@@ -66,7 +66,7 @@ class outputConv(nn.Module):
     def __init__(self, input_depth, output_depth):
         super(outputConv, self).__init__()
         self.conv = nn.Sequential(
-            nn.Conv2d(input_depth,input_depth // 2, 3, padding=1), 
+            nn.Conv2d(input_depth, input_depth // 2, 3, padding=1), 
             nn.ReLU(inplace=True),
             nn.Conv2d(input_depth // 2,input_depth // 2, 3, padding=1),
             nn.ReLU(inplace=True),

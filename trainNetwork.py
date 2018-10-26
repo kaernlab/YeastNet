@@ -1,96 +1,113 @@
+## Import Librarys and Modules
 import torch
-from torch.utils.data import Dataset, DataLoader
-import torchvision
-import torch.nn as nn
-import torch.nn.functional as F
+from torch.utils.data import DataLoader
 from torch import optim
-
-import numpy
-import imageio
 import tensorboardX as tbX
 import pdb
-import processImages as pi
+import random
+import time
 
+## Import Custom Modules
+import processImages as pi
+import validateNetwork as valNet
+
+## Import Custom Classes
 from processImages import YeastSegmentationDataset
 from defineNetwork import Net
 from weightedLoss import WeightedCrossEntropyLoss
 
-yeast_dataset = YeastSegmentationDataset(crop_size = 512)
+## Start Timer
+start_time = time.time()
 
+## Launch Tensorboard Summary Writing Object
 writer = tbX.SummaryWriter()#log_dir="./logs")
+
+## Make Test and Validation Partitions
+samplingList = list(range(pi.num_images()))
+samples = random.sample(samplingList,153)
+trainingIDs = samples[:129]
+testIDs = samples[130:]
+
+## Instantiate Net, Load Parameters, Move Net to GPU
 net = Net()
+optimizer = optim.SGD(net.parameters(), lr=0.1)
+
+##Send Model to GPU
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 net.to(device)
 
-optimizer = optim.SGD(net.parameters(), lr=0.000001)#, momentum=0.9, weight_decay=0.0005)
+## Load State
+net.load_state_dict(torch.load("model.pt"))
+optimizer.load_state_dict(torch.load("model_opt.pt"))
 
-criterion = WeightedCrossEntropyLoss()#nn.CrossEntropyLoss()#
-
-trainloader = torch.utils.data.DataLoader(yeast_dataset, batch_size=1,
+## Instantiate Training and Validation DataLoaders
+trainDataSet = YeastSegmentationDataset(trainingIDs, crop_size = 128)
+trainLoader = torch.utils.data.DataLoader(trainDataSet, batch_size=4,
                                           shuffle=True, num_workers=0)
 
-testloader = torch.utils.data.DataLoader(yeast_dataset, batch_size=1,
+testDataSet = YeastSegmentationDataset(testIDs, crop_size = 512)
+testLoader = torch.utils.data.DataLoader(testDataSet, batch_size=1,
                                          shuffle=False, num_workers=0)
 
+
+## Set Training hyperparameters/conditions
+#optimizer = optim.SGD(net.parameters(), lr=0.1)#, momentum=0.9, weight_decay=0.0005)
+criterion = WeightedCrossEntropyLoss()#nn.CrossEntropyLoss()#
 classes = ('background','cell')
+iteration = 0
 
-
-
-for epoch in range(10):  # loop over the dataset multiple times
+# Epoch Loop: first loops over batches, then over v alidation set
+for epoch in range(100):  
     
-    running_loss = 0.0
-    for i, data in enumerate(trainloader, 0):
-        # Total iteration
-        iteration = (1 + i)# + (epoch)*51)
-        best_model_loss = 10
+    ## Batch Loop
+    for i, data in enumerate(trainLoader, 0):
+        ## Total iteration
+        iteration+=1
 
-        # Get inputs
-        training_image, labels, loss_weight_map = data
-        training_image, labels, loss_weight_map = training_image.to(device), labels.to(device), loss_weight_map.to(device)
+        ## Get inputs
+        trainingImage, mask, lossWeightMap = data
+        trainingImage, mask, lossWeightMap = trainingImage.to(device), mask.to(device), lossWeightMap.to(device)
 
-        # zero the parameter gradients
+        ## Zero the parameter gradients
         optimizer.zero_grad()
-        # Forward Pass
-        outputs = net(training_image.float())
+
+        ## Forward Pass
+        outputs = net(trainingImage.float())
         print('Forward Pass')
 
-        # Write Graph
-        writer.add_graph(net, training_image.float())
+        ## Write Graph
+        writer.add_graph(net, trainingImage.float())
 
-        # Output Image
-        #print(outputs.detach().numpy().shape)
-        bg = outputs.cpu().detach().numpy()[0,0,:,:]
-        cl = outputs.cpu().detach().numpy()[0,1,:,:]
-        #mk = numpy.zeros((512,512))
-        mk = (cl>bg)*1
-        print(mk)
-        imageio.imwrite('outputs/' + str(iteration) + 'Pred.png', mk.astype(float))
-        imageio.imwrite('outputs/' + str(iteration) + 'IMG.png', training_image[0,0,:,:].cpu().detach().numpy())
-        #pdb.set_trace()
-        imageio.imwrite('outputs/' + str(iteration) + 'True.png', labels[0,:,:,0].cpu().detach().numpy())
-
-        # Calculate Loss
-        loss = criterion(outputs, labels.long(), loss_weight_map)
-        print('Loss Calculated')
-        writer.add_scalar('loss', loss.item(), iteration)
-
-        # Backpropagate Loss
+        ## Calculate and Write Loss
+        loss = criterion(outputs, mask.long(), lossWeightMap)
+        print('Loss Calculated:', loss.item())
+        writer.add_scalar('Batch Loss', loss.item(), iteration)
+        
+        ## Backpropagate Loss
         loss.backward()
         print('Backpropagation Done')
 
-        # Update Parameters
+        #for param in net.parameters():
+        #    print(param.grad.data.sum())
+        
+        #pdb.set_trace()
+        ## Update Parameters
         optimizer.step()
-        print('optimezer')
+        print('optimizer')
 
-        # Print statistics
-        print('[%d, %d, %5d] loss: %.5f' % (iteration, epoch + 1, i + 1, loss.item()))
 
-        # Save Model 
-        if best_model_loss>loss.item():
-            torch.save(net.state_dict(),  "model.pt")
+    ## Epoch validation
+    print('Validating.... Please Hold')
+    val_loss = valNet.validate(net, device, testLoader, criterion, saveImages=True)
+    print('[%d, %d] loss: %.5f' % (iteration, epoch + 1, val_loss))
+    writer.add_scalar('Validation Loss', val_loss, epoch)
+    ## Save Model 
+    #if True #saveCP:
+    torch.save(net.state_dict(),  "model.pt")
+    torch.save(optimizer.state_dict(),  "model_opt.pt")
 
-print('Finished Training')
-#pdb.set_trace()
-#writer.export_scalars_to_json("./logs/all_scalars.json")
+## Finish
+elapsed_time = time.time() - start_time
+print('Finished Training, Duration: seconds' + str(format(elapsed_time, '02d')))
 writer.close()
-
+torch.save(net.state_dict(),  "model.pt")
