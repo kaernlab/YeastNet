@@ -4,7 +4,6 @@ import torch
 
 import numpy as np
 import matplotlib.pyplot as plt
-from processImages import show_image
 import pdb
 
 class WeightedCrossEntropyLoss(nn.modules.loss._WeightedLoss):

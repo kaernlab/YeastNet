@@ -17,33 +17,10 @@ from processImages import YeastSegmentationDataset
 from defineNetwork import Net
 from weightedLoss import WeightedCrossEntropyLoss
 
-## Start Timer
+## Start Timer, Tensorboard
 start_time = time.time()
-
-## Launch Tensorboard Summary Writing Object
 writer = tbX.SummaryWriter()#log_dir="./logs")
-
-
-
-iteration = 0
-start = 0
 resume = True
-if resume:
-    start = 1803
-    iteration = 30634
-    batchIDs = numpy.load('batchIDs.npy').item()
-else:
-    ## Make Test and Validation Partitions
-    samplingList = list(range(pi.num_images()))
-    samples = random.sample(samplingList,153)
-    trainingIDs = samples[:129]
-    testIDs = samples[130:]
-    batchIDs = {
-        "train": trainingIDs,
-        "test": testIDs
-    } 
-    numpy.save('batchIDs.npy', batchIDs) #Need to do .item() when loading
-
 
 ## Instantiate Net, Load Parameters, Move Net to GPU
 net = Net()
@@ -54,27 +31,38 @@ device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 net.to(device)
 
 ## Load State
-#net.load_state_dict(torch.load("model.pt"))
-#optimizer.load_state_dict(torch.load("model_opt.pt"))
+if resume==False:
+    ## Make Test and Validation Partitions
+    samplingList = list(range(pi.numImages()))
+    samples = random.sample(samplingList,153)
+    trainIDs = samples[:129]
+    testIDs = samples[130:]
+    iteration = 0 #30634
+    start = 0 # 1803
+else:
+    checkpoint = torch.load("model_cp.pt")
+    testIDs = checkpoint['testID']
+    trainIDs = checkpoint['trainID']
+    iteration = checkpoint['iteration']
+    start = checkpoint['epoch']
+    net.load_state_dict(checkpoint['network'])
+    optimizer.load_state_dict(checkpoint['optimizer'])
 
 ## Instantiate Training and Validation DataLoaders
-trainDataSet = YeastSegmentationDataset(batchIDs['train'], crop_size = 256)
-trainLoader = torch.utils.data.DataLoader(trainDataSet, batch_size=8,
+trainDataSet = YeastSegmentationDataset(trainIDs, crop_size = 256, random_rotate = True)
+trainLoader = torch.utils.data.DataLoader(trainDataSet, batch_size=4,
                                           shuffle=True, num_workers=0)
 
-testDataSet = YeastSegmentationDataset(batchIDs['test'], crop_size = 512)
+testDataSet = YeastSegmentationDataset(testIDs, crop_size = 512)
 testLoader = torch.utils.data.DataLoader(testDataSet, batch_size=1,
                                          shuffle=False, num_workers=0)
 
-
 ## Set Training hyperparameters/conditions
-#optimizer = optim.SGD(net.parameters(), lr=0.1)#, momentum=0.9, weight_decay=0.0005)
-criterion = WeightedCrossEntropyLoss()#nn.CrossEntropyLoss()#
+criterion = WeightedCrossEntropyLoss()
 classes = ('background','cell')
 
 
-
-# Epoch Loop: first loops over batches, then over v alidation set
+## Epoch Loop: first loops over batches, then over v alidation set
 for epoch in range(start,10000):  
     
     ## Batch Loop
@@ -85,7 +73,7 @@ for epoch in range(start,10000):
         ## Get inputs
         trainingImage, mask, lossWeightMap = data
         trainingImage, mask, lossWeightMap = trainingImage.to(device), mask.to(device), lossWeightMap.to(device)
-        pdb.set_trace()
+
         ## Zero the parameter gradients
         optimizer.zero_grad()
 
@@ -105,28 +93,29 @@ for epoch in range(start,10000):
         loss.backward()
         print('Backpropagation Done')
 
-        #for param in net.parameters():
-        #    print(param.grad.data.sum())
-        
-        #pdb.set_trace()
         ## Update Parameters
         optimizer.step()
         print('optimizer')
 
 
     ## Epoch validation
-    print('Validating.... Please Hold')
-    val_loss = valNet.validate(net, device, testLoader, criterion, saveImages=True)
-    print('[%d, %d] loss: %.5f' % (iteration, epoch + 1, val_loss))
-    writer.add_scalar('Validation Loss', val_loss, epoch)
+    print('\n\nValidating.... Please Hold')
+    val_acc = valNet.validate(net, device, testLoader, criterion, saveImages=True)
+    print('[%d, %d] IntOfUnion (Cell): %.5f \n\n' % (iteration, epoch + 1, val_acc))
+    writer.add_scalar('Validation Cell IOU', val_acc, epoch)
     ## Save Model 
     #if True #saveCP:
-    torch.save(net.state_dict(),  "model.pt")
-    torch.save(optimizer.state_dict(),  "model_opt.pt")
-    #numpy.save('batchIDs.npy', resume)
+    checkpoint = {
+        "network": net.state_dict(),
+        "optimizer": optimizer.state_dict(),
+        "trainID": trainIDs,
+        "testID": testIDs,
+        "epoch": epoch,
+        "iteration": iteration
+    }
+    torch.save(checkpoint, "model_cp.pt")
 
 ## Finish
 elapsed_time = time.time() - start_time
-print('Finished Training, Duration: seconds' + str(elapsed_time))#format(elapsed_time, '02d')))
+print('Finished Training, Duration: seconds' + str(elapsed_time))
 writer.close()
-torch.save(net.state_dict(),  "model.pt")
