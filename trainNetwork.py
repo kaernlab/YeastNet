@@ -54,8 +54,8 @@ device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 net.to(device)
 
 ## Load State
-net.load_state_dict(torch.load("model.pt"))
-optimizer.load_state_dict(torch.load("model_opt.pt"))
+#net.load_state_dict(torch.load("model.pt"))
+#optimizer.load_state_dict(torch.load("model_opt.pt"))
 
 ## Instantiate Training and Validation DataLoaders
 trainDataSet = YeastSegmentationDataset(batchIDs['train'], crop_size = 256)
@@ -85,7 +85,7 @@ for epoch in range(start,10000):
         ## Get inputs
         trainingImage, mask, lossWeightMap = data
         trainingImage, mask, lossWeightMap = trainingImage.to(device), mask.to(device), lossWeightMap.to(device)
-
+        pdb.set_trace()
         ## Zero the parameter gradients
         optimizer.zero_grad()
 
