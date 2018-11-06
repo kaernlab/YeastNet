@@ -47,10 +47,17 @@ else:
     start = checkpoint['epoch']
     net.load_state_dict(checkpoint['network'])
     optimizer.load_state_dict(checkpoint['optimizer'])
+    #batchIDs = numpy.load('batchIDs.npy').item()
+    #testIDs = batchIDs['test']
+    #trainIDs = batchIDs['train']
+    #iteration = 30634
+    #start = 1803
+    #optimizer.load_state_dict(torch.load('model_opt.pt'))
+    #net.load_state_dict(torch.load('model.pt'))
 
 ## Instantiate Training and Validation DataLoaders
 trainDataSet = YeastSegmentationDataset(trainIDs, crop_size = 256, random_rotate = True)
-trainLoader = torch.utils.data.DataLoader(trainDataSet, batch_size=4,
+trainLoader = torch.utils.data.DataLoader(trainDataSet, batch_size=8,
                                           shuffle=True, num_workers=0)
 
 testDataSet = YeastSegmentationDataset(testIDs, crop_size = 512)
@@ -115,7 +122,6 @@ for epoch in range(start,10000):
     }
     pdb.set_trace()
     torch.save(checkpoint, "model_cp.pt")
-
 ## Finish
 elapsed_time = time.time() - start_time
 print('Finished Training, Duration: seconds' + str(elapsed_time))
