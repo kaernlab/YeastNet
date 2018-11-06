@@ -51,9 +51,9 @@ def label_cells(mask, bw_image):
         single_label_mask = (labels==idx).astype(np.uint8)
         im2, contour, hierarchy = cv2.findContours(single_label_mask, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
         contours.append(contour)
-        x = cv2.drawContours(bw_image, contour, -1, (255,0,0), 1)
+        x = cv2.drawContours(bw_image, contour, -1, (1,0,0), 1)
 
-    return x, labels
+    return centroids, x, labels
     #fig, axs = plt.subplots(1, 2)
     #axs[0].imshow(labels) 
     #axs[1].imshow(x)

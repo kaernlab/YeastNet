@@ -1,37 +1,36 @@
 import torch
+import numpy as np
 
-import processImages as pi
 from defineNetwork import Net
 from processImages import YeastSegmentationDataset
 
 
-def inferNetworkBatch():
-    ## Make Inference DataLoader
-    samplingList = list(range(pi.num_images()))
-    yeastDataset = YeastSegmentationDataset(samplingList, crop_size = 1024)
-    inferenceLoader = torch.utils.data.DataLoader(yeastDataset, batch_size=1,
-                                            shuffle=False, num_workers=0)
-
+def inferNetworkBatch(images, num_images, device = "cpu"):
     ## Instantiate Net, load parameters
     net = Net()
     net.eval()
-    net.load_state_dict(torch.load("100epochmodel.pt"))
+    checkpoint = torch.load("Current Model/model_cp.pt")
+    net.load_state_dict(checkpoint['network'])
+
     ## Move Net to GPU
-    device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
     net.to(device)
     ## Inference 
-    #for 
-    with torch.no_grad():
-        outputs = net(validationImage.float())
 
+    outputs = [None] * num_images
+    for idx, image in enumerate(images):
+        with torch.no_grad():
+            outputs[idx] = net(image)
 
-def inferNetworkSingle(image):
+    return outputs
+
+def inferNetworkSingle(image, device = "cpu"):
     ## Instantiate Net, load parameters
     net = Net()
     net.eval()
-    net.load_state_dict(torch.load("./Current Model/model.pt"))
+    checkpoint = torch.load("Current Model/model_cp.pt")
+    net.load_state_dict(checkpoint['network'])
+
     ## Move Net to GPU
-    device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
     net.to(device)
     ## Inference 
     with torch.no_grad():

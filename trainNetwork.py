@@ -113,6 +113,7 @@ for epoch in range(start,10000):
         "epoch": epoch,
         "iteration": iteration
     }
+    pdb.set_trace()
     torch.save(checkpoint, "model_cp.pt")
 
 ## Finish

@@ -9,30 +9,31 @@ import imageio
 ## 
 import inferNetwork
 import labelCells
-from timelapse import timelapse
+from timelapse import Timelapse
 
 
 ##
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
-tl = timelapse(device = device)
+tl = Timelapse(device = device, image_dir = 'inference')
 
 # Load image for inference 
-tl.load_image('./inference/test.tif', normalize = True, dimension = 1024)
+tl.loadImages(normalize = True, dimensions = 1024)
 
 # Pass Image to Inference script, return predicted Mask
-masks = inferNetwork.inferNetworkSingle(tl.tensorBW)
-
-tl.make_mask(masks)
+masks = inferNetwork.inferNetworkBatch(images = tl.tensorsBW, num_images = tl.num_images, device = device)
+#pdb.set_trace()
+tl.makeMasks(masks)
 #imageio.imwrite('inference/Pred.png', tl.mask)
 
 # Pass Mask into cell labeling script, return labelled cells 
-#pdb.set_trace()
-x, tl.labels = labelCells.label_cells(tl.mask.astype(np.uint8), tl.imageBW)
+for idx, (imageBW, mask) in enumerate(zip(tl.imagesBW, tl.masks)):
+    tl.centroids[idx], x, tl.labels[idx] = labelCells.label_cells(np.array(mask).astype(np.uint8), np.array(imageBW))
+    imageio.imwrite('inference/label' + str(idx) + '.png', np.array(tl.labels[idx]))
+    imageio.imwrite('inference/overlay' + str(idx) + '.png', x)
 
 
 # Test Image
-plt.figure()
-plt.imshow(tl.labels) 
-plt.show()
-
+#plt.figure()
+#plt.imshow(x) 
+#plt.show()
 
