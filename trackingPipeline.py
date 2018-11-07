@@ -18,31 +18,30 @@ tl = Timelapse(device = device, image_dir = 'inference')
 
 # Load image for inference 
 tl.loadImages(normalize = True, dimensions = 1024)
-
 # Pass Image to Inference script, return predicted Mask
-masks = inferNetwork.inferNetworkBatch(images = tl.tensorsBW, num_images = tl.num_images, device = device)
-#pdb.set_trace()
-tl.makeMasks(masks)
-#imageio.imwrite('inference/Pred.png', tl.mask)
+predictions = inferNetwork.inferNetworkBatch(images = tl.tensorsBW, num_images = tl.num_images, device = device)
+tl.makeMasks(predictions)
+
+for idx, mask in enumerate(tl.masks):
+    imageio.imwrite('inference/Results/' + str(idx) + 'Pred.png', mask)
 
 # Pass Mask into cell labeling script, return labelled cells 
 for idx, (imageBW, mask) in enumerate(zip(tl.imagesBW, tl.masks)):
     tl.centroids[idx], x, tl.labels[idx] = labelCells.label_cells(np.array(mask).astype(np.uint8), np.array(imageBW))
-    #imageio.imwrite('inference/label' + str(idx) + '.png', np.array(tl.labels[idx]))
-    #imageio.imwrite('inference/overlay' + str(idx) + '.png', x)
+    imageio.imwrite('inference/Results/' + str(idx) + 'Labels.png', np.array(tl.labels[idx]))
+    imageio.imwrite('inference/Results/' + str(idx) + 'Overlay.png', x)
 
 
 tl.cellTrack()
 
 for imageID in range(tl.num_images-1):
-    plt.figure()
+    fig = plt.figure()
+    bw_image = np.dstack((tl.imagesBW[imageID],tl.imagesBW[imageID],tl.imagesBW[imageID]))
     for idx, (label, cnt) in enumerate(zip(tl.identity[imageID], tl.centroids[imageID])):
-        plt.imshow(tl.imagesBW[imageID])
-        plt.text(cnt[0]-2, cnt[1]+2, label, fontsize=8, color='r')
-    plt.show()
-
-# Test Image
-#plt.figure()
-#plt.imshow(x) 
-#plt.show()
+        plt.imshow(bw_image)
+        plt.text(cnt[0]-2, cnt[1]+2, label, fontsize=6, color='r')
+        
+    fig.savefig('inference/Results/' + str(idx) + 'Tracked.png', bbox_inches='tight')
+    plt.close(fig)
+    ##plt.show()
 

@@ -13,7 +13,8 @@ class Timelapse():
         self.device = device
         self.toTensor = tv.transforms.ToTensor()
         self.image_dir = image_dir
-        self.num_images = len(os.listdir(self.image_dir))
+        self.image_filenames = [f for f in os.listdir(self.image_dir) if os.path.isfile(os.path.join(self.image_dir, f))]
+        self.num_images = len(self.image_filenames)
         self.total_cells = 0
 
         self.tensorsBW = [None] * self.num_images
@@ -24,9 +25,10 @@ class Timelapse():
         self.identity = [None] * self.num_images
 
     def loadImages(self, dimensions = 1024, normalize = False):
-        for idx, image_name in enumerate(os.listdir(self.image_dir)):
+        for idx, image_name in enumerate(self.image_filenames):
             path = self.image_dir + '/' + image_name
             imageBW = imio.imread(path) 
+
             if normalize:
                 imageBW = self.normalizeGrayscale(imageBW, imageBW.mean(), imageBW.std())
 
