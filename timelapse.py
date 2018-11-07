@@ -18,7 +18,7 @@ class Timelapse():
         self.device = device
         self.toTensor = tv.transforms.ToTensor()
         self.image_dir = image_dir
-        self.image_filenames = [f for f in os.listdir(self.image_dir) if os.path.isfile(os.path.join(self.image_dir, f))]
+        self.image_filenames = [f for f in os.listdir(self.image_dir + '/BW') if os.path.isfile(os.path.join(self.image_dir + '/BW', f))]
         self.num_images = len(self.image_filenames)
         self.total_cells = 0
 
@@ -31,7 +31,7 @@ class Timelapse():
 
     def loadImages(self, dimensions = 1024, normalize = False):
         for idx, image_name in enumerate(self.image_filenames):
-            path = self.image_dir + '/' + image_name
+            path = self.image_dir + '/BW/' + image_name
             imageBW = imio.imread(path) 
 
             if normalize:
@@ -42,7 +42,9 @@ class Timelapse():
             tensorBW = self.centreCrop(tensorBW.to(self.device), dimensions)
 
             self.tensorsBW[idx] = tensorBW
-            self.imagesBW[idx] = self.centreCrop(imageBW, dimensions)
+            imageBW = self.centreCrop(imageBW, dimensions) 
+            self.imagesBW[idx] = (imageBW / imageBW.max() * 255).astype('uint8')
+            
 
     def makeMasks(self, masks):
         for idx, mask in enumerate(masks):
@@ -50,7 +52,8 @@ class Timelapse():
             cellMask = mask.cpu().detach().numpy()[0,1,:,:]
             mask = np.zeros(bgMask.shape)
             mask = (cellMask > bgMask) * 1
-            self.masks[idx] = mask
+            mask = mask / mask.max() * 255
+            self.masks[idx] = mask.astype('uint8')
 
     def centreCrop(self, image, new_size):
         h,w = image.shape[-2:]
@@ -66,7 +69,7 @@ class Timelapse():
         return image
 
     def cellTrack(self):
-        self.identity[0] = np.unique(self.labels[0])[:]
+        self.identity[0] = np.unique(self.labels[0])[1:]
         self.total_cells = len(self.identity[0])
 
         for idx, (first, second) in enumerate(zip(self.centroids[:-1], self.centroids[1:])):
@@ -80,8 +83,9 @@ class Timelapse():
             #pdb.set_trace()
             for idx, label in enumerate(self.identity[timepoint]):
                 if label == -1:
-                    self.identity[timepoint][idx] = self.total_cells
                     self.total_cells += 1
+                    self.identity[timepoint][idx] = self.total_cells
+                    
             
     def DrawTrackedCells(self):
         font_fname = 'Utils/Fonts/Roboto-Regular.ttf'
@@ -89,8 +93,9 @@ class Timelapse():
         font = ImageFont.truetype(font_fname, font_size)
     
         for imageID in range(self.num_images):
-            bw_image = ((self.imagesBW[imageID]/ self.imagesBW[imageID].max())*255)
-            bw_image = Image.fromarray(bw_image.astype('uint8')).convert('RGB')
+            #bw_image = ((self.imagesBW[imageID]/ self.imagesBW[imageID].max())*255)
+            #bw_image = Image.fromarray(bw_image.astype('uint8')).convert('RGB')
+            bw_image = Image.fromarray(self.imagesBW[imageID]).convert('RGB')
             draw = ImageDraw.Draw(bw_image)
 
             for idx, (label, cnt) in enumerate(zip(self.identity[imageID], self.centroids[imageID])):

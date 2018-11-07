@@ -46,14 +46,15 @@ def label_cells(mask, bw_image):
     labels = watershed(-dist_transform, markers, mask=image3)
     labels = np.array(labels)
     contours = []
-
+    
     for idx in range(1,num_labels):
         single_label_mask = (labels==idx).astype(np.uint8)
         im2, contour, hierarchy = cv2.findContours(single_label_mask, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
         contours.append(contour)
-        x = cv2.drawContours(bw_image, contour, -1, (1,0,0), 1)
+        overlay = cv2.drawContours(bw_image, contour, -1, (255,0,0), 1)
+    
 
-    return centroids[1:], x, labels
+    return centroids[1:], overlay, labels
     #fig, axs = plt.subplots(1, 2)
     #axs[0].imshow(labels) 
     #axs[1].imshow(x)
