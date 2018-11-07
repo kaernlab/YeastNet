@@ -1,10 +1,12 @@
 ##
-import matplotlib.pyplot as plt
+#import matplotlib.pyplot as plt
+
 import torchvision as tv
 import numpy as np
 import torch
 import pdb
 import imageio
+import pickle
 
 ## 
 import inferNetwork
@@ -34,14 +36,7 @@ for idx, (imageBW, mask) in enumerate(zip(tl.imagesBW, tl.masks)):
 
 tl.cellTrack()
 
-for imageID in range(tl.num_images-1):
-    fig = plt.figure()
-    bw_image = np.dstack((tl.imagesBW[imageID],tl.imagesBW[imageID],tl.imagesBW[imageID]))
-    for idx, (label, cnt) in enumerate(zip(tl.identity[imageID], tl.centroids[imageID])):
-        plt.imshow(bw_image)
-        plt.text(cnt[0]-2, cnt[1]+2, label, fontsize=6, color='r')
-        
-    fig.savefig('inference/Results/' + str(idx) + 'Tracked.png', bbox_inches='tight')
-    plt.close(fig)
-    ##plt.show()
+tl.DrawTrackedCells()
 
+with open('./inference/timelapse.pkl', 'wb') as f:
+    pickle.dump(tl, f, pickle.HIGHEST_PROTOCOL)

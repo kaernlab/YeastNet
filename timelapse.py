@@ -7,6 +7,11 @@ import pdb
 import scipy.spatial.distance as scipyD
 import scipy.optimize as scipyO
 
+import PIL
+import PIL.Image as Image
+import PIL.ImageDraw as ImageDraw
+import PIL.ImageFont as ImageFont
+
 
 class Timelapse():
     def __init__(self, device, image_dir = "inference"):
@@ -78,5 +83,20 @@ class Timelapse():
                     self.identity[timepoint][idx] = self.total_cells
                     self.total_cells += 1
             
+    def DrawTrackedCells(self):
+        font_fname = 'Utils/Fonts/Roboto-Regular.ttf'
+        font_size = 20
+        font = ImageFont.truetype(font_fname, font_size)
+    
+        for imageID in range(self.num_images):
+            bw_image = ((self.imagesBW[imageID]/ self.imagesBW[imageID].max())*255)
+            bw_image = Image.fromarray(bw_image.astype('uint8')).convert('RGB')
+            draw = ImageDraw.Draw(bw_image)
 
+            for idx, (label, cnt) in enumerate(zip(self.identity[imageID], self.centroids[imageID])):
+                draw.text((cnt[0]-5, cnt[1]-10), str(label), font=font, fill='rgb(255, 0, 0)')
+                
+            bw_image.save('inference/Results/Tracked/' + str(imageID) + 'Tracked.png')
+
+        os.system("ffmpeg -r 5 -i ./inference/Results/Tracked/%01dTracked.png -vcodec mpeg4 -y movie.mp4")
             

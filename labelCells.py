@@ -53,7 +53,7 @@ def label_cells(mask, bw_image):
         contours.append(contour)
         x = cv2.drawContours(bw_image, contour, -1, (1,0,0), 1)
 
-    return centroids, x, labels
+    return centroids[1:], x, labels
     #fig, axs = plt.subplots(1, 2)
     #axs[0].imshow(labels) 
     #axs[1].imshow(x)
