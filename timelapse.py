@@ -29,6 +29,7 @@ class Timelapse():
         self.centroids = [None] * self.num_images#np.array([self.num_images])
         self.identity = [None] * self.num_images
         self.contouredImages = [None] * self.num_images
+        self.areas = [None] * self.num_images
 
     def loadImages(self, dimensions = 1024, normalize = False):
         for idx, image_name in enumerate(self.image_filenames):
@@ -73,15 +74,26 @@ class Timelapse():
         self.identity[0] = np.unique(self.labels[0])[1:]
         self.total_cells = len(self.identity[0])
 
-        for idx, (first, second) in enumerate(zip(self.centroids[:-1], self.centroids[1:])):
+        for idx, (firstC, secondC, firstA, secondA) in enumerate(zip(self.centroids[:-1], self.centroids[1:], self.areas[:-1], self.areas[1:])):
             timepoint = idx+1
-            Y = scipyD.cdist(first, second, 'euclidean')
+            centroidDiff = scipyD.cdist(firstC, secondC, 'euclidean')
+            #pdb.set_trace()
+            firstA = np.repeat(np.array(firstA)[:, np.newaxis], len(secondA), axis = 1)
+            secondA = np.repeat(np.array(secondA)[np.newaxis, :], len(firstA), axis = 0)
+            #pdb.set_trace()
+            areaDiff = np.abs(firstA - secondA)
+            Y = centroidDiff * areaDiff
+            
+            
+
+            
             firstLabels, secondLabels = scipyO.linear_sum_assignment(Y)
             firstLabels = self.identity[timepoint-1]
-            self.identity[timepoint] = np.full(len(second), -1)
+            self.identity[timepoint] = np.full(len(secondC), -1)
+
             for idx, label in enumerate(secondLabels):
                 self.identity[timepoint][label] = firstLabels[idx]
-            #pdb.set_trace()
+
             for idx, label in enumerate(self.identity[timepoint]):
                 if label == -1:
                     self.total_cells += 1

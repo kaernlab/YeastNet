@@ -38,25 +38,28 @@ def label_cells(mask, bw_image):
     num_labels = output[0]
     # The second cell is the label matrix
     markers = output[1]
-    
     # The third cell is the stat matrix
     stats = output[2]
     # The fourth cell is the centroid matrix
     centroids = output[3]
-
+ 
 
     labels = watershed(-dist_transform, markers, mask=image3)
     labels = np.array(labels)
+
+    ## Get label Areas
+
+
     contours = []
-    #pdb.set_trace()
+    areas = []
     for idx in range(1,num_labels):
         single_label_mask = (labels==idx).astype(np.uint8)
         im2, contour, hierarchy = cv2.findContours(single_label_mask, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
         contours.append(contour)
-        contouredImage = cv2.drawContours(bw_image, contour, -1, (255,0,0), 1)
+        contouredImage = cv2.drawContours(bw_image, contour, -1, (0,0,255), 1)
+        areas.append(single_label_mask.sum())
     
-
-    return centroids[1:], contouredImage, labels
+    return centroids[1:], contouredImage, labels, areas
     #fig, axs = plt.subplots(1, 2)
     #axs[0].imshow(labels) 
     #axs[1].imshow(x)

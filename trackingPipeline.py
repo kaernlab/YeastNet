@@ -29,7 +29,7 @@ for idx, mask in enumerate(tl.masks):
 
 # Pass Mask into cell labeling script, return labelled cells 
 for idx, (imageBW, mask) in enumerate(zip(tl.imagesBW, tl.masks)):
-    tl.centroids[idx], tl.contouredImages[idx], tl.labels[idx] = labelCells.label_cells(np.array(mask), np.array(imageBW))
+    tl.centroids[idx], tl.contouredImages[idx], tl.labels[idx], tl.areas[idx] = labelCells.label_cells(np.array(mask), np.array(imageBW))
     imageio.imwrite('inference/Results/' + str(idx) + 'Labels.png', tl.labels[idx])
     imageio.imwrite('inference/Results/' + str(idx) + 'Overlay.png', tl.contouredImages[idx])
 
