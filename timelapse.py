@@ -28,6 +28,7 @@ class Timelapse():
         self.labels = [None] * self.num_images#np.array([self.num_images])
         self.centroids = [None] * self.num_images#np.array([self.num_images])
         self.identity = [None] * self.num_images
+        self.contouredImages = [None] * self.num_images
 
     def loadImages(self, dimensions = 1024, normalize = False):
         for idx, image_name in enumerate(self.image_filenames):
@@ -95,12 +96,12 @@ class Timelapse():
         for imageID in range(self.num_images):
             #bw_image = ((self.imagesBW[imageID]/ self.imagesBW[imageID].max())*255)
             #bw_image = Image.fromarray(bw_image.astype('uint8')).convert('RGB')
-            bw_image = Image.fromarray(self.imagesBW[imageID]).convert('RGB')
+            bw_image = Image.fromarray(self.contouredImages[imageID])#.convert('RGB')
             draw = ImageDraw.Draw(bw_image)
 
-            for idx, (label, cnt) in enumerate(zip(self.identity[imageID], self.centroids[imageID])):
-                draw.text((cnt[0]-5, cnt[1]-10), str(label), font=font, fill='rgb(255, 0, 0)')
-                
+            for idx, (label, centroid) in enumerate(zip(self.identity[imageID], self.centroids[imageID])):
+                draw.text((centroid[0]-5, centroid[1]-10), str(label), font=font, fill='rgb(255, 0, 0)')
+
             bw_image.save('inference/Results/Tracked/' + str(imageID) + 'Tracked.png')
 
         os.system("ffmpeg -r 5 -i ./inference/Results/Tracked/%01dTracked.png -vcodec mpeg4 -y movie.mp4")
