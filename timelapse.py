@@ -77,15 +77,12 @@ class Timelapse():
         for idx, (firstC, secondC, firstA, secondA) in enumerate(zip(self.centroids[:-1], self.centroids[1:], self.areas[:-1], self.areas[1:])):
             timepoint = idx+1
             centroidDiff = scipyD.cdist(firstC, secondC, 'euclidean')
-            #pdb.set_trace()
             firstA = np.repeat(np.array(firstA)[:, np.newaxis], len(secondA), axis = 1)
             secondA = np.repeat(np.array(secondA)[np.newaxis, :], len(firstA), axis = 0)
-            #pdb.set_trace()
-            areaDiff = np.abs(firstA - secondA)
-            Y = centroidDiff * areaDiff
+            areaDiff = np.abs(firstA.astype('int32') - secondA.astype('int32'))
+            Y = centroidDiff     + areaDiff
             
-            
-
+            pdb.set_trace()
             
             firstLabels, secondLabels = scipyO.linear_sum_assignment(Y)
             firstLabels = self.identity[timepoint-1]

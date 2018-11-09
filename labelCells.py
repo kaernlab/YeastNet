@@ -22,14 +22,16 @@ def label_cells(mask, bw_image):
     bw_image = np.dstack((bw_image,bw_image,bw_image))
     #bw_image = np.reshape(bw_image, (512,512,3)) 
 
-    kernel = np.ones((3,3),np.uint8)
+    kernel3 = np.ones((3,3),np.uint8)
+    kernel2 = np.ones((2,2),np.uint8)
     labels = np.array(mask.size)
-    image2 = cv2.erode(mask,kernel,iterations = 3)
-    image3 = cv2.dilate(image2,kernel,iterations = 3)
+    image2 = cv2.erode(mask,kernel3,iterations = 3)
+    image3 = cv2.dilate(image2,kernel3,iterations = 3)
 
     dist_transform = cv2.distanceTransform(image3,cv2.DIST_L2,5)
     sure_fg = cv2.threshold(dist_transform,0.6*dist_transform.max(),255,0)
-    sure_fg = cv2.dilate(sure_fg[1].astype(np.uint8),kernel,iterations = 3)
+    sure_fg = cv2.dilate(sure_fg[1].astype(np.uint8), kernel3 ,iterations = 3)
+    #sure_fg = cv2.dilate(sure_fg,kernel3,iterations = 3)
     #pi.show_image(sure_fg[1])
 
     output = cv2.connectedComponentsWithStats(sure_fg, 4, cv2.CV_32S)#, cv2.CCL_DEFAULT)
@@ -43,10 +45,9 @@ def label_cells(mask, bw_image):
     # The fourth cell is the centroid matrix
     centroids = output[3]
  
-
+    
     labels = watershed(-dist_transform, markers, mask=image3)
     labels = np.array(labels)
-
     ## Get label Areas
 
 
