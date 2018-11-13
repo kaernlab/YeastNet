@@ -6,6 +6,7 @@ import os
 import pdb
 import scipy.spatial.distance as scipyD
 import scipy.optimize as scipyO
+import matplotlib.pyplot as plt
 
 import PIL
 import PIL.Image as Image
@@ -80,9 +81,9 @@ class Timelapse():
             firstA = np.repeat(np.array(firstA)[:, np.newaxis], len(secondA), axis = 1)
             secondA = np.repeat(np.array(secondA)[np.newaxis, :], len(firstA), axis = 0)
             areaDiff = np.abs(firstA.astype('int32') - secondA.astype('int32'))
-            Y = centroidDiff     + areaDiff
+            Y = centroidDiff#     + areaDiff
             
-            pdb.set_trace()
+            #pdb.set_trace()
             
             firstLabels, secondLabels = scipyO.linear_sum_assignment(Y)
             firstLabels = self.identity[timepoint-1]
@@ -111,7 +112,29 @@ class Timelapse():
             for idx, (label, centroid) in enumerate(zip(self.identity[imageID], self.centroids[imageID])):
                 draw.text((centroid[0]-5, centroid[1]-10), str(label), font=font, fill='rgb(255, 0, 0)')
 
-            bw_image.save('inference/Results/Tracked/' + str(imageID) + 'Tracked.png')
+            bw_image.save('inference/Results/Tracked/' + str(imageID) + 'Trackedg.png')
 
         os.system("ffmpeg -r 5 -i ./inference/Results/Tracked/%01dTracked.png -vcodec mpeg4 -y movie.mp4")
+
+    def BuildCellTrack(self, idx, fp):
+
+        outputfl = []
+        x = []
+        
+        for timepoint in range(30):
+            path = self.image_dir + '/' + fp + '/z1_t_000_000_%03d_'  % (timepoint+1) + fp + '.tif'
+            imageGFP = imio.imread(path) 
+            imageGFP = self.centreCrop(imageGFP, 1024)
+            #imageGFP = (imageGFP / imageGFP.max() * 255).astype('uint8')
             
+            trackedLabel = np.where((self.identity[timepoint]==idx))[0]
+            if trackedLabel:
+                trackedLabel = trackedLabel[0]
+                area = self.areas[timepoint][trackedLabel]
+                fl = imageGFP[self.labels[timepoint]==trackedLabel].sum() / area
+                outputfl.append(fl)
+                x.append(timepoint)
+        
+        return x, outputfl
+        
+        
