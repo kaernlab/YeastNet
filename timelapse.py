@@ -17,28 +17,46 @@ import PIL.ImageFont as ImageFont
 class Timelapse():
     def __init__(self, device, image_dir = "inference"):
         self.device = device
-        self.toTensor = tv.transforms.ToTensor()
+        self.toTensor = tv.transforms.ToTensor() 
         self.image_dir = image_dir
         self.image_filenames = [f for f in os.listdir(self.image_dir + '/BW') if os.path.isfile(os.path.join(self.image_dir + '/BW', f))]
         self.num_images = len(self.image_filenames)
         self.total_cells = 0
 
         self.tensorsBW = [None] * self.num_images
-        self.imagesBW = [None] * self.num_images#np.array([self.num_images])
-        self.masks = [None] * self.num_images#np.array([self.num_images])
-        self.labels = [None] * self.num_images#np.array([self.num_images])
-        self.centroids = [None] * self.num_images#np.array([self.num_images])
+        self.imagesBW = [None] * self.num_images
+        self.masks = [None] * self.num_images
+        self.labels = [None] * self.num_images
+        self.centroids = [None] * self.num_images
         self.identity = [None] * self.num_images
         self.contouredImages = [None] * self.num_images
         self.areas = [None] * self.num_images
 
+    def __getitem__(self,idx):
+        x, gfpfl = self.BuildCellTrack(idx, 'GFP')
+        x, rfpfl = self.BuildCellTrack(idx, 'RFP')
+        return x, gfpfl, rfpfl
+
     def loadImages(self, dimensions = 1024, normalize = False):
+        """ Load all BrightField images.
+        
+        This method loops over the list of all file names in the image directory
+        and loads the image. Each image is normalized, cropped, and formatted to
+        fit the right dimensionality for network inference. The pytorch tensor 
+        and uint8 version are stored in a list property on the object.
+
+        Input:
+            dimensions: width and length of desired cropped image size (1024px default)
+            normalize: boolean input offering option to normalize image (False default)
+
+        Output: None, computed values are stored on object
+        """
         for idx, image_name in enumerate(self.image_filenames):
             path = self.image_dir + '/BW/' + image_name
             imageBW = imio.imread(path) 
 
             if normalize:
-                imageBW = self.normalizeGrayscale(imageBW, imageBW.mean(), imageBW.std())
+                imageBW = self.normalizeGrayscale(imageBW)
 
             tensorBW = imageBW[:,:,np.newaxis].astype(np.double)
             tensorBW = self.toTensor(tensorBW).unsqueeze_(0).float()
@@ -50,6 +68,19 @@ class Timelapse():
             
 
     def makeMasks(self, masks):
+        """ Generate masks from network segmentation predictions.
+        
+        This method loops over the list of all mask predictions. Predictions are
+        output from the network in a 3d array. They are moved back to the RAM from
+        the gpu vram, and converted to a numpy array from a pytorch tensor. The
+        array is separated into two mask (background and cell). The cell mask is 
+        the desired mask. It is converted into uint8 and stored on the object.
+
+        Input:
+            masks: network segmentation prediction mask, dtype: cuda pytorch tensor
+
+        Output: None, computed values are stored on object
+        """
         for idx, mask in enumerate(masks):
             bgMask = mask.cpu().detach().numpy()[0,0,:,:]
             cellMask = mask.cpu().detach().numpy()[0,1,:,:]
@@ -59,19 +90,54 @@ class Timelapse():
             self.masks[idx] = mask.astype('uint8')
 
     def centreCrop(self, image, new_size):
+        """ Crops center of images into squares
+
+        This method crops grayscale or RGB images. A square of size new_size x new_size
+        is cropped out of the middle of the image. Intended as a utility for other methods
+        in this class.
+
+        Input:
+            image: 1 or 3 channel image to be cropped.
+            new_size: desired width and height of square cropped image.
+
+        Outputs:
+            cropped_image: cropped image of size new_size x new_size
+        """
         h,w = image.shape[-2:]
         if len(image.shape) > 2:
-            image = image[:, :, h//2 - new_size//2 : h//2 + new_size//2, w//2 - new_size//2 : w//2 + new_size//2 ]
+            cropped_image = image[:, :, h//2 - new_size//2 : h//2 + new_size//2, w//2 - new_size//2 : w//2 + new_size//2 ]
         else:
-            image = image[h//2 - new_size//2 : h//2 + new_size//2, w//2 - new_size//2 : w//2 + new_size//2 ]
-        return image
+            cropped_image = image[h//2 - new_size//2 : h//2 + new_size//2, w//2 - new_size//2 : w//2 + new_size//2 ]
+        return cropped_image
 
-    def normalizeGrayscale(self, image, mean, std):
-        image = (image - mean) / std
-        image = (image - image.min()) / image.max()
-        return image
+    def normalizeGrayscale(self, image):
+        """ Normalizes grayscale images.
+
+        Normalizes image by zero-centering the data and changing the standard deviation
+        to 1. Then rescaling the data between 0-1 
+
+        Input:
+            image: image to be normalized
+        Outputs:
+            normalizedImage: normalized image
+        """
+        image = (image - image.mean()) / image.std()
+        normalizedImage = (image - image.min()) / image.max()
+        return normalizedImage
 
     def cellTrack(self):
+        """ Tracks cells through segmented timelapse microscopy images.
+
+        Detected Cells in the first image are numbered. These numbers are their identity. 
+        Tracking occurs one frame at a time. The distance between the centroids of every
+        cell in one frame and every cell in the subesequent frame is calculated and stru-
+        ctured into a difference matrix. The row index indicates the cell identities in
+        the initial frame and the column index indicates the cell labels (not identities)
+        fromt he subsequent frame. The hungarian algorithm matches centroids most likely 
+        to belong to the same cell. And identity array is stored indicating the identity of
+        every cell in a frame.
+
+        """
         self.identity[0] = np.unique(self.labels[0])[1:]
         self.total_cells = len(self.identity[0])
 
@@ -112,7 +178,7 @@ class Timelapse():
             for idx, (label, centroid) in enumerate(zip(self.identity[imageID], self.centroids[imageID])):
                 draw.text((centroid[0]-5, centroid[1]-10), str(label), font=font, fill='rgb(255, 0, 0)')
 
-            bw_image.save('inference/Results/Tracked/' + str(imageID) + 'Trackedg.png')
+            bw_image.save('inference/Results/Tracked/' + str(imageID) + 'Tracked.png')
 
         os.system("ffmpeg -r 5 -i ./inference/Results/Tracked/%01dTracked.png -vcodec mpeg4 -y movie.mp4")
 
@@ -121,7 +187,7 @@ class Timelapse():
         outputfl = []
         x = []
         
-        for timepoint in range(30):
+        for timepoint in range(self.num_images):
             path = self.image_dir + '/' + fp + '/z1_t_000_000_%03d_'  % (timepoint+1) + fp + '.tif'
             imageGFP = imio.imread(path) 
             imageGFP = self.centreCrop(imageGFP, 1024)

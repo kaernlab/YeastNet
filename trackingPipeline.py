@@ -24,26 +24,7 @@ def smooth(x,window_len=5,window='flat'):
     y=numpy.convolve(w/w.sum(),s,mode='valid')
     return y
 
-with open('./inference/timelapse.pkl', 'rb') as f:
-    tl = pickle.load(f)
 
-
-plt.figure()
-for i in range(1,20):
-    x, gfpfl = tl.BuildCellTrack(i, 'GFP')
-    x, rfpfl = tl.BuildCellTrack(i, 'RFP')
-    
-    gfpfl = smooth(gfpfl)
-    rfpfl = smooth(rfpfl)
-    diff = int(abs(len(x) - len(gfpfl)) / 2)
-    #print(diff)
-    gfpfl = gfpfl[diff:-diff]
-    rfpfl = rfpfl[diff:-diff]
-    ratio = rfpfl / gfpfl 
-    ratio = ratio / ratio.max()
-    plt.plot(x,ratio)
-
-plt.show()
 
 
 ##
@@ -72,3 +53,25 @@ def makeTL():
 
     with open('./inference/timelapse.pkl', 'wb') as f:
         pickle.dump(tl, f, pickle.HIGHEST_PROTOCOL)
+
+makeTL()
+
+with open('./inference/timelapse.pkl', 'rb') as f:
+    tl = pickle.load(f)
+
+
+plt.figure()
+for i in range(tl.total_cells):
+    x, gfpfl, rfpfl = tl[i]
+    if len(x)>9:
+        gfpfl = smooth(gfpfl)
+        rfpfl = smooth(rfpfl)
+        diff = int(abs(len(x) - len(gfpfl)) / 2)
+        #print(diff)
+        gfpfl = gfpfl[diff:-diff]
+        rfpfl = rfpfl[diff:-diff]
+        ratio = rfpfl / gfpfl 
+        #ratio = ratio / ratio.max()
+        plt.plot(x,ratio)
+
+plt.show()
