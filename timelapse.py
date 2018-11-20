@@ -178,7 +178,7 @@ class Timelapse():
             for idx, (label, centroid) in enumerate(zip(self.identity[imageID], self.centroids[imageID])):
                 draw.text((centroid[0]-5, centroid[1]-10), str(label), font=font, fill='rgb(255, 0, 0)')
 
-            bw_image.save('inference/Results/Tracked/' + str(imageID) + 'Tracked.png')
+            #bw_image.save('inference/Results/Tracked/' + str(imageID) + 'Tracked.png')
 
         os.system("ffmpeg -r 5 -i ./inference/Results/Tracked/%01dTracked.png -vcodec mpeg4 -y movie.mp4")
 
