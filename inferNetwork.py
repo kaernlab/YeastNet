@@ -1,8 +1,6 @@
 import torch
-import numpy as np
 
 from defineNetwork import Net
-from processImages import YeastSegmentationDataset
 
 
 def inferNetworkBatch(images, num_images, device = "cpu"):

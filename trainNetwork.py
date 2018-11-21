@@ -47,13 +47,6 @@ else:
     start = checkpoint['epoch']
     net.load_state_dict(checkpoint['network'])
     optimizer.load_state_dict(checkpoint['optimizer'])
-    #batchIDs = numpy.load('batchIDs.npy').item()
-    #testIDs = batchIDs['test']
-    #trainIDs = batchIDs['train']
-    #iteration = 30634
-    #start = 1803
-    #optimizer.load_state_dict(torch.load('model_opt.pt'))
-    #net.load_state_dict(torch.load('model.pt'))
 
 ## Instantiate Training and Validation DataLoaders
 trainDataSet = YeastSegmentationDataset(trainIDs, crop_size = 256, random_rotate = True)

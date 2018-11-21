@@ -1,35 +1,19 @@
 ##
 #import matplotlib.pyplot as plt
-
-import torchvision as tv
 import numpy as np
 import torch
 import pdb
 import imageio
 import pickle
 import matplotlib.pyplot as plt
-import scipy.io as sio
 import cv2
-import scipy.spatial.distance as scipyD
-import scipy.optimize as scipyO
+
 ## 
 import inferNetwork
 import labelCells
 from timelapse import Timelapse
-import csv
-import numpy
-
-def smooth(x,window_len=5,window='flat'):
-    s=numpy.r_[x[window_len-1:0:-1],x,x[-2:-window_len-1:-1]]
-    if window == 'flat': #moving average
-        w=numpy.ones(window_len,'d')
-    else:
-        w=eval('numpy.'+window+'(window_len)')
-    y=numpy.convolve(w/w.sum(),s,mode='valid')
-    return y
-
-
-
+from Utils.helpers import smooth
+from TestPerformance import testMeasureF
 
 ##
 def makeTL():
@@ -58,77 +42,7 @@ def makeTL():
     with open('./inference/timelapse.pkl', 'wb') as f:
         pickle.dump(tl, f, pickle.HIGHEST_PROTOCOL)
 
-
-
-def testMeasureF():
-    with open('./inference/timelapse.pkl', 'rb') as f:
-        tl = pickle.load(f)
-
-    
-
-
-    runningAcc = 0
-    for frameID in range(tl.num_images):
-        mask = sio.loadmat(tl.image_dir + '/Masks/mask' + str(frameID))
-        mask = mask['LAB']
-        mask = tl.centreCrop(mask, 1024)
-        output = cv2.connectedComponentsWithStats(mask, 4, cv2.CV_32S)#, cv2.CCL_DEFAULT)
-        num_labels = output[0]
-        markers = output[1]
-        stats = output[2]
-        centroids = output[3]
-        imageio.imwrite(tl.image_dir + '/Results/' + str(frameID) + 'LabelsT.png', markers)
-        #print(tl.centroids[1])
-        #print(centroids[1:])
-        predCent = tl.centroids[frameID]
-        trueCent = centroids[1:]
-
-        with open(tl.image_dir + '/TestSet/YeastNet/yn_seg' + str(frameID) + '.csv', 'w', newline='') as csvfile:
-
-            fieldnames = ['Cell_number', 'Cell_colour', 'Position_X', 'Position_Y']
-            writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
-
-            writer.writeheader()
-            for cellID, pred in enumerate(predCent):
-                writer.writerow({
-                    'Cell_number': cellID+1,
-                    'Cell_colour': 0,
-                    'Position_X': pred[0],
-                    'Position_Y': pred[1]})
-        
-        with open(tl.image_dir + '/TestSet/GroundTruth/gt_seg' + str(frameID) + '.csv', 'w', newline='') as csvfile:
-
-            fieldnames = ['Cell_number', 'Cell_colour', 'Position_X', 'Position_Y']
-            writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
-
-            writer.writeheader()
-            for cellID, pred in enumerate(trueCent):
-                writer.writerow({
-                    'Cell_number': cellID+1,
-                    'Cell_colour': 0,
-                    'Position_X': pred[0],
-                    'Position_Y': pred[1]})
-
-        centroidDiff = scipyD.cdist(predCent, trueCent, 'euclidean')
-        firstLabels, secondLabels = scipyO.linear_sum_assignment(centroidDiff)
-
-        accurateSeg = 0
-        trueSeg = len(trueCent)
-
-
-        for pred, true  in zip(firstLabels,secondLabels):
-            
-            print(centroidDiff[pred, true])
-            if centroidDiff[pred, true] < 5 :
-                accurateSeg += 1
-                
-        print(accurateSeg, trueSeg)
-        runningAcc += accurateSeg / trueSeg
-
-    print(runningAcc / tl.num_images)
-def showTraces():
-    with open('./inference/timelapse.pkl', 'rb') as f:
-        tl = pickle.load(f)
+def showTraces(tl):
 
     plt.figure()
     for i in range(tl.total_cells):
@@ -146,6 +60,9 @@ def showTraces():
 
     plt.show()
 
+with open('./inference/timelapse.pkl', 'rb') as f:
+    tl = pickle.load(f)
 
 makeTL()
-testMeasureF()
+testMeasureF(tl)
+#showTraces(tl)

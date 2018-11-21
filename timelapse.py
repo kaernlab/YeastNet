@@ -19,7 +19,7 @@ class Timelapse():
         self.device = device
         self.toTensor = tv.transforms.ToTensor() 
         self.image_dir = image_dir
-        self.image_filenames = [f for f in os.listdir(self.image_dir + '/BW') if os.path.isfile(os.path.join(self.image_dir + '/BW', f))]
+        self.image_filenames = [f for f in os.listdir(self.image_dir + '/BW') if os.path.isfile(os.path.join(self.image_dir + '/BW', f)) and f[-3:] != 'ini']
         self.num_images = len(self.image_filenames)
         self.total_cells = 0
 
