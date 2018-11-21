@@ -16,7 +16,7 @@ import scipy.optimize as scipyO
 import inferNetwork
 import labelCells
 from timelapse import Timelapse
-
+import csv
 import numpy
 
 def smooth(x,window_len=5,window='flat'):
@@ -58,53 +58,94 @@ def makeTL():
     with open('./inference/timelapse.pkl', 'wb') as f:
         pickle.dump(tl, f, pickle.HIGHEST_PROTOCOL)
 
-makeTL()
 
 
-with open('./inference/timelapse.pkl', 'rb') as f:
-    tl = pickle.load(f)
+def testMeasureF():
+    with open('./inference/timelapse.pkl', 'rb') as f:
+        tl = pickle.load(f)
 
-for i in range(tl.num_images):
-    mask = sio.loadmat(tl.image_dir + '/Masks/mask' + str(i))
-    mask = mask['LAB']
-    mask = tl.centreCrop(mask, 1024)
-    output = cv2.connectedComponentsWithStats(mask, 4, cv2.CV_32S)#, cv2.CCL_DEFAULT)
-    num_labels = output[0]
-    markers = output[1]
-    stats = output[2]
-    centroids = output[3]
+    
 
-    #print(tl.centroids[1])
-    #print(centroids[1:])
-    predCent = tl.centroids[i]
-    trueCent = centroids[1:]
-    centroidDiff = scipyD.cdist(predCent, trueCent, 'euclidean')
-    firstLabels, secondLabels = scipyO.linear_sum_assignment(centroidDiff)
 
-    accurateSeg = 0
-    trueSeg = len(trueCent)
-    for pred, true  in zip(firstLabels,secondLabels):
+    runningAcc = 0
+    for frameID in range(tl.num_images):
+        mask = sio.loadmat(tl.image_dir + '/Masks/mask' + str(frameID))
+        mask = mask['LAB']
+        mask = tl.centreCrop(mask, 1024)
+        output = cv2.connectedComponentsWithStats(mask, 4, cv2.CV_32S)#, cv2.CCL_DEFAULT)
+        num_labels = output[0]
+        markers = output[1]
+        stats = output[2]
+        centroids = output[3]
+        imageio.imwrite(tl.image_dir + '/Results/' + str(frameID) + 'LabelsT.png', markers)
+        #print(tl.centroids[1])
+        #print(centroids[1:])
+        predCent = tl.centroids[frameID]
+        trueCent = centroids[1:]
 
-        print(centroidDiff[pred, true])
-        if centroidDiff[pred, true] < 5 :
-            accurateSeg += 1
+        with open(tl.image_dir + '/TestSet/YeastNet/yn_seg' + str(frameID) + '.csv', 'w', newline='') as csvfile:
+
+            fieldnames = ['Cell_number', 'Cell_colour', 'Position_X', 'Position_Y']
+            writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
+
+            writer.writeheader()
+            for cellID, pred in enumerate(predCent):
+                writer.writerow({
+                    'Cell_number': cellID+1,
+                    'Cell_colour': 0,
+                    'Position_X': pred[0],
+                    'Position_Y': pred[1]})
         
-    print(accurateSeg, trueSeg)
-pdb.set_trace()
+        with open(tl.image_dir + '/TestSet/GroundTruth/gt_seg' + str(frameID) + '.csv', 'w', newline='') as csvfile:
+
+            fieldnames = ['Cell_number', 'Cell_colour', 'Position_X', 'Position_Y']
+            writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
+
+            writer.writeheader()
+            for cellID, pred in enumerate(trueCent):
+                writer.writerow({
+                    'Cell_number': cellID+1,
+                    'Cell_colour': 0,
+                    'Position_X': pred[0],
+                    'Position_Y': pred[1]})
+
+        centroidDiff = scipyD.cdist(predCent, trueCent, 'euclidean')
+        firstLabels, secondLabels = scipyO.linear_sum_assignment(centroidDiff)
+
+        accurateSeg = 0
+        trueSeg = len(trueCent)
 
 
-plt.figure()
-for i in range(tl.total_cells):
-    x, gfpfl, rfpfl = tl[i]
-    if len(x)>9:
-        gfpfl = smooth(gfpfl)
-        rfpfl = smooth(rfpfl)
-        diff = int(abs(len(x) - len(gfpfl)) / 2)
-        #print(diff)
-        gfpfl = gfpfl[diff:-diff]
-        rfpfl = rfpfl[diff:-diff]
-        ratio = rfpfl / gfpfl 
-        #ratio = ratio / ratio.max()
-        plt.plot(x,ratio)
+        for pred, true  in zip(firstLabels,secondLabels):
+            
+            print(centroidDiff[pred, true])
+            if centroidDiff[pred, true] < 5 :
+                accurateSeg += 1
+                
+        print(accurateSeg, trueSeg)
+        runningAcc += accurateSeg / trueSeg
 
-plt.show()
+    print(runningAcc / tl.num_images)
+def showTraces():
+    with open('./inference/timelapse.pkl', 'rb') as f:
+        tl = pickle.load(f)
+
+    plt.figure()
+    for i in range(tl.total_cells):
+        x, gfpfl, rfpfl = tl[i]
+        if len(x)>9:
+            gfpfl = smooth(gfpfl)
+            rfpfl = smooth(rfpfl)
+            diff = int(abs(len(x) - len(gfpfl)) / 2)
+            #print(diff)
+            gfpfl = gfpfl[diff:-diff]
+            rfpfl = rfpfl[diff:-diff]
+            ratio = rfpfl / gfpfl 
+            #ratio = ratio / ratio.max()
+            plt.plot(x,ratio)
+
+    plt.show()
+
+
+makeTL()
+testMeasureF()
