@@ -26,7 +26,7 @@ def validate(net, device, testLoader, criterion, saveImages = False):
             outputs = net(validationImage.float())
         predictions = outputs.cpu().detach().numpy()[0,:,:,:]
         maskPrediction = (predictions[1] > predictions[0]) * 1
-        
+
         ## Calculate the Loss for the batch
         #loss = criterion(outputs, mask.long(), lossWeightMap)
         #print(loss.item())
@@ -39,8 +39,8 @@ def validate(net, device, testLoader, criterion, saveImages = False):
         if saveImages:
             
             imageio.imwrite('Validation/' + str(i) + 'Pred.png', maskPrediction.astype(float))
-            imageio.imwrite('Validation/' + str(i) + 'IMG.png', validationImage[0,0,:,:].detach().numpy())
-            imageio.imwrite('Validation/' + str(i) + 'True.png', mask[0,:,:,0].detach().numpy())
+            imageio.imwrite('Validation/' + str(i) + 'IMG.png', validationImage[0,0,:,:].cpu().detach().numpy())
+            imageio.imwrite('Validation/' + str(i) + 'True.png', mask[0,:,:,0].cpu().detach().numpy())
 
     ## Return the mean Loss
     return runningIOU / i

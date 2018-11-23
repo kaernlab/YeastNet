@@ -20,7 +20,8 @@ from weightedLoss import WeightedCrossEntropyLoss
 ## Start Timer, Tensorboard
 start_time = time.time()
 writer = tbX.SummaryWriter()#log_dir="./logs")
-resume = True
+resume = False
+k = 1
 
 ## Instantiate Net, Load Parameters, Move Net to GPU
 net = Net()
@@ -33,10 +34,12 @@ net.to(device)
 ## Load State
 if resume==False:
     ## Make Test and Validation Partitions
-    samplingList = list(range(pi.numImages()))
-    samples = random.sample(samplingList,153)
-    trainIDs = samples[:129]
-    testIDs = samples[130:]
+    #samplingList = list(range(pi.numImages()))
+    #samples = random.sample(samplingList,153)
+    samples = torch.load('sampleIDs.pt')
+    trainIDs = samples[:-15]
+    testIDs = samples[-15:]
+    samplesNext = testIDs + trainIDs
     iteration = 0 #30634
     start = 0 # 1803
 else:
@@ -50,7 +53,7 @@ else:
 
 ## Instantiate Training and Validation DataLoaders
 trainDataSet = YeastSegmentationDataset(trainIDs, crop_size = 256, random_rotate = True)
-trainLoader = torch.utils.data.DataLoader(trainDataSet, batch_size=8,
+trainLoader = torch.utils.data.DataLoader(trainDataSet, batch_size=4,
                                           shuffle=True, num_workers=0)
 
 testDataSet = YeastSegmentationDataset(testIDs, crop_size = 512)
@@ -63,7 +66,7 @@ classes = ('background','cell')
 
 
 ## Epoch Loop: first loops over batches, then over v alidation set
-for epoch in range(start,10000):  
+for epoch in range(start,2000):  
     
     ## Batch Loop
     for i, data in enumerate(trainLoader, 0):
@@ -79,30 +82,34 @@ for epoch in range(start,10000):
 
         ## Forward Pass
         outputs = net(trainingImage.float())
-        print('Forward Pass')
+        #print('Forward Pass')
 
         ## Write Graph
-        writer.add_graph(net, trainingImage.float())
+        #writer.add_graph(net, trainingImage.float())
 
         ## Calculate and Write Loss
         loss = criterion(outputs, mask.long(), lossWeightMap)
-        print('Loss Calculated:', loss.item())
+        #print('Loss Calculated:', loss.item())
         writer.add_scalar('Batch Loss', loss.item(), iteration)
         
         ## Backpropagate Loss
         loss.backward()
-        print('Backpropagation Done')
+        #print('Backpropagation Done')
 
         ## Update Parameters
         optimizer.step()
-        print('optimizer')
+        #print('optimizer')
 
 
     ## Epoch validation
-    print('\n\nValidating.... Please Hold')
+    #print('\n\nValidating.... Please Hold')
     val_acc = valNet.validate(net, device, testLoader, criterion, saveImages=True)
-    print('[%d, %d] IntOfUnion (Cell): %.5f \n\n' % (iteration, epoch + 1, val_acc))
+    print('[%d, %d] IntOfUnion (Cell): %.5f \n' % (iteration, epoch + 1, val_acc))
     writer.add_scalar('Validation Cell IOU', val_acc, epoch)
+    ## Epoch Time
+    elapsed_time = time.time() - start_time
+    print(str(elapsed_time / 60) + 'min')
+
     ## Save Model 
     #if True #saveCP:
     checkpoint = {
@@ -113,8 +120,7 @@ for epoch in range(start,10000):
         "epoch": epoch,
         "iteration": iteration
     }
-    pdb.set_trace()
-    torch.save(checkpoint, "model_cp.pt")
+    torch.save(checkpoint, "model_cp" + str(k) + ".pt")
 ## Finish
 elapsed_time = time.time() - start_time
 print('Finished Training, Duration: seconds' + str(elapsed_time))
