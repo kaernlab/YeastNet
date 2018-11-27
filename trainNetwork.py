@@ -21,7 +21,7 @@ from weightedLoss import WeightedCrossEntropyLoss
 start_time = time.time()
 writer = tbX.SummaryWriter()#log_dir="./logs")
 resume = False
-k = 4
+k = 9
 
 ## Instantiate Net, Load Parameters, Move Net to GPU
 net = Net()

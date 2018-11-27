@@ -19,7 +19,7 @@ class Timelapse():
         self.device = device
         self.toTensor = tv.transforms.ToTensor() 
         self.image_dir = image_dir
-        self.image_filenames = [f for f in os.listdir(self.image_dir + '/BW') if os.path.isfile(os.path.join(self.image_dir + '/BW', f)) and f[-3:] != 'ini']
+        self.image_filenames = [f for f in os.listdir(self.image_dir) if os.path.isfile(os.path.join(self.image_dir, f)) and f[-3:] != 'ini']
         self.num_images = len(self.image_filenames)
         self.total_cells = 0
 
@@ -37,7 +37,7 @@ class Timelapse():
         x, rfpfl = self.BuildCellTrack(idx, 'RFP')
         return x, gfpfl, rfpfl
 
-    def loadImages(self, dimensions = 1024, normalize = False):
+    def loadImages(self, dimensions = 1024, normalize = False, toCrop = True):
         """ Load all BrightField images.
         
         This method loops over the list of all file names in the image directory
@@ -52,7 +52,7 @@ class Timelapse():
         Output: None, computed values are stored on object
         """
         for idx, image_name in enumerate(self.image_filenames):
-            path = self.image_dir + '/BW/' + image_name
+            path = self.image_dir + image_name
             imageBW = imio.imread(path) 
 
             if normalize:
@@ -60,10 +60,13 @@ class Timelapse():
 
             tensorBW = imageBW[:,:,np.newaxis].astype(np.double)
             tensorBW = self.toTensor(tensorBW).unsqueeze_(0).float()
-            tensorBW = self.centreCrop(tensorBW.to(self.device), dimensions)
+            tensorBW = tensorBW.to(self.device)
+
+            if toCrop == True:
+                tensorBW = self.centreCrop(tensorBW, dimensions)
+                imageBW = self.centreCrop(imageBW, dimensions) 
 
             self.tensorsBW[idx] = tensorBW
-            imageBW = self.centreCrop(imageBW, dimensions) 
             self.imagesBW[idx] = (imageBW / imageBW.max() * 255).astype('uint8')
             
 
@@ -178,9 +181,9 @@ class Timelapse():
             for idx, (label, centroid) in enumerate(zip(self.identity[imageID], self.centroids[imageID])):
                 draw.text((centroid[0]-5, centroid[1]-10), str(label), font=font, fill='rgb(255, 0, 0)')
 
-            bw_image.save('Test/Results/Tracked/' + str(imageID) + 'Tracked.png')
+            bw_image.save(self.image_dir + 'Results/Tracking/' + str(imageID) + 'Tracked.png')
 
-        os.system("ffmpeg -r 5 -i ./inference/Results/Tracked/%01dTracked.png -vcodec mpeg4 -y movie.mp4")
+        #os.system("ffmpeg -r 5 -i ./inference/Results/Tracked/%01dTracked.png -vcodec mpeg4 -y movie.mp4")
 
     def BuildCellTrack(self, idx, fp):
 
@@ -188,7 +191,7 @@ class Timelapse():
         x = []
         
         for timepoint in range(self.num_images):
-            path = self.image_dir + '/' + fp + '/z1_t_000_000_%03d_'  % (timepoint+1) + fp + '.tif'
+            path = self.image_dir + fp + '/z1_t_000_000_%03d_'  % (timepoint+1) + fp + '.tif'
             imageGFP = imio.imread(path) 
             imageGFP = self.centreCrop(imageGFP, 1024)
             #imageGFP = (imageGFP / imageGFP.max() * 255).astype('uint8')
