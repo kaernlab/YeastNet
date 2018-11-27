@@ -21,7 +21,7 @@ from weightedLoss import WeightedCrossEntropyLoss
 start_time = time.time()
 writer = tbX.SummaryWriter()#log_dir="./logs")
 resume = False
-k = 1
+k = 4
 
 ## Instantiate Net, Load Parameters, Move Net to GPU
 net = Net()
@@ -37,13 +37,15 @@ if resume==False:
     #samplingList = list(range(pi.numImages()))
     #samples = random.sample(samplingList,153)
     samples = torch.load('sampleIDs.pt')
-    trainIDs = samples[:-15]
-    testIDs = samples[-15:]
-    samplesNext = testIDs + trainIDs
+    
+    ## Choose right samples based on k
+    kid = 150-k*15
+    testIDs = samples[kid:kid+15]
+    trainIDs = samples[:kid] + samples[kid+15:]
     iteration = 0 #30634
     start = 0 # 1803
 else:
-    checkpoint = torch.load("model_cp.pt")
+    checkpoint = torch.load("model_cp" + str(k) + ".pt")
     testIDs = checkpoint['testID']
     trainIDs = checkpoint['trainID']
     iteration = checkpoint['iteration']
@@ -66,7 +68,7 @@ classes = ('background','cell')
 
 
 ## Epoch Loop: first loops over batches, then over v alidation set
-for epoch in range(start,2000):  
+for epoch in range(start,3000):  
     
     ## Batch Loop
     for i, data in enumerate(trainLoader, 0):
