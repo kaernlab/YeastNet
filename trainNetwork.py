@@ -20,8 +20,8 @@ from weightedLoss import WeightedCrossEntropyLoss
 ## Start Timer, Tensorboard
 start_time = time.time()
 writer = tbX.SummaryWriter()#log_dir="./logs")
-resume = False
-k = 9
+resume = True
+k = 5
 
 ## Instantiate Net, Load Parameters, Move Net to GPU
 net = Net()
@@ -68,7 +68,7 @@ classes = ('background','cell')
 
 
 ## Epoch Loop: first loops over batches, then over v alidation set
-for epoch in range(start,3000):  
+for epoch in range(start+1,3000):  
     
     ## Batch Loop
     for i, data in enumerate(trainLoader, 0):

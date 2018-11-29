@@ -60,7 +60,7 @@ class YeastSegmentationDataset(Dataset):
         return image
 
     def loadImage(self, idx):
-        image = imageio.imread('Training Data 1D/Images/im' + str(idx) + '.tif') 
+        image = imageio.imread('Training Data 1D/Images/im%03d.tif' % idx) 
         return image[:,:,numpy.newaxis].astype(numpy.double)
 
     def loadMask(self, idx):
