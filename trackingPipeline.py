@@ -53,8 +53,10 @@ def makeTL(imagedir):
 
     tl.DrawTrackedCells()
 
-    with open('./inference/timelapse.pkl', 'wb') as f:
+    with open(tl.image_dir + 'Results/timelapse.pkl', 'wb') as f:
         pickle.dump(tl, f, pickle.HIGHEST_PROTOCOL)
+
+    return tl
 
 def showTraces(tl):
 
@@ -74,9 +76,8 @@ def showTraces(tl):
 
     plt.show()
 
-with open('./inference/timelapse.pkl', 'rb') as f:
-    tl = pickle.load(f)
-
-makeTL(imagedir)
-testMeasureF(tl)
+tl = makeTL(imagedir)
+#with open(imagedir + 'Results/timelapse.pkl', 'rb') as f:
+#    tl = pickle.load(f)
+testMeasureF(tl, makeTG=False)
 #showTraces(tl)

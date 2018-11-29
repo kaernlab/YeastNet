@@ -26,5 +26,26 @@ def accuracy(true_mask, pred_mask):
 
     return PixAccuracy, IntOfUnion
 
+def centreCrop(image, new_size):
+    """ Crops center of images into squares
+
+    This method crops grayscale or RGB images. A square of size new_size x new_size
+    is cropped out of the middle of the image. Intended as a utility for other methods
+    in this class.
+
+    Input:
+        image: 1 or 3 channel image to be cropped.
+        new_size: desired width and height of square cropped image.
+
+    Outputs:
+        cropped_image: cropped image of size new_size x new_size
+    """
+    h,w = image.shape[-2:]
+    if len(image.shape) > 2:
+        cropped_image = image[:, :, h//2 - new_size//2 : h//2 + new_size//2, w//2 - new_size//2 : w//2 + new_size//2 ]
+    else:
+        cropped_image = image[h//2 - new_size//2 : h//2 + new_size//2, w//2 - new_size//2 : w//2 + new_size//2 ]
+    return cropped_image
+
 
     

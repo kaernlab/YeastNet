@@ -13,6 +13,7 @@ import PIL.Image as Image
 import PIL.ImageDraw as ImageDraw
 import PIL.ImageFont as ImageFont
 
+from Utils.helpers import centreCrop
 
 class Timelapse():
     def __init__(self, device, image_dir = "inference"):
@@ -32,6 +33,8 @@ class Timelapse():
         self.contouredImages = [None] * self.num_images
         self.areas = [None] * self.num_images
 
+        self.centreCrop = centreCrop
+
     def __getitem__(self,idx):
         x, gfpfl = self.BuildCellTrack(idx, 'GFP')
         x, rfpfl = self.BuildCellTrack(idx, 'RFP')
@@ -48,8 +51,10 @@ class Timelapse():
         Input:
             dimensions: width and length of desired cropped image size (1024px default)
             normalize: boolean input offering option to normalize image (False default)
+            toCrop: boolean input offering option to crop image
 
-        Output: None, computed values are stored on object
+        Output:
+            None, computed values are stored on object
         """
         for idx, image_name in enumerate(self.image_filenames):
             path = self.image_dir + image_name
@@ -82,7 +87,8 @@ class Timelapse():
         Input:
             masks: network segmentation prediction mask, dtype: cuda pytorch tensor
 
-        Output: None, computed values are stored on object
+        Output:
+            None, computed values are stored on object
         """
         for idx, mask in enumerate(masks):
             bgMask = mask.cpu().detach().numpy()[0,0,:,:]
@@ -91,27 +97,6 @@ class Timelapse():
             mask = (cellMask > bgMask) * 1
             mask = mask / mask.max() * 255
             self.masks[idx] = mask.astype('uint8')
-
-    def centreCrop(self, image, new_size):
-        """ Crops center of images into squares
-
-        This method crops grayscale or RGB images. A square of size new_size x new_size
-        is cropped out of the middle of the image. Intended as a utility for other methods
-        in this class.
-
-        Input:
-            image: 1 or 3 channel image to be cropped.
-            new_size: desired width and height of square cropped image.
-
-        Outputs:
-            cropped_image: cropped image of size new_size x new_size
-        """
-        h,w = image.shape[-2:]
-        if len(image.shape) > 2:
-            cropped_image = image[:, :, h//2 - new_size//2 : h//2 + new_size//2, w//2 - new_size//2 : w//2 + new_size//2 ]
-        else:
-            cropped_image = image[h//2 - new_size//2 : h//2 + new_size//2, w//2 - new_size//2 : w//2 + new_size//2 ]
-        return cropped_image
 
     def normalizeGrayscale(self, image):
         """ Normalizes grayscale images.
