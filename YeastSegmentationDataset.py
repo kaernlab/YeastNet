@@ -6,28 +6,22 @@ import os
 import pdb
 import random
 
-
 import torch
 from torch.utils.data import Dataset, DataLoader
 import torchvision.transforms as TV
 import torchvision.transforms.functional as TF
-#Utility functions
-
-
-def numImages():
-    return len(os.listdir('Training Data 1D/Images'))
-
 
 #Define Dataset Class
 class YeastSegmentationDataset(Dataset):
 
-    def __init__(self, list_IDs, transform=None, crop_size = 512, random_rotate = False):
+    def __init__(self, list_IDs, transform=None, crop_size = 512, random_rotate = False, random_flip = False):
         self.ToTensor = TV.ToTensor()
         self.ToPILImage = TV.ToPILImage()
         self.crop_size = crop_size
         self.list_IDs = list_IDs
-        self.all_data = list(range(numImages()))
+        self.all_data = list(range(len(os.listdir('Training Data 1D/Images'))))
         self.rotate = random_rotate
+        self.flip = random_rotate
 
     def __len__(self):
         return len(self.list_IDs)
@@ -41,6 +35,8 @@ class YeastSegmentationDataset(Dataset):
 
         if self.rotate:
             bw_image, mask, weight_loss_matrix = self.randomRotate(bw_image, mask, weight_loss_matrix)
+        if self.flip:
+            bw_image, mask, weight_loss_matrix = self.randomFlip(bw_image, mask, weight_loss_matrix)
 
         bw_image = self.ToTensor(bw_image)
         return bw_image, mask, weight_loss_matrix
@@ -87,9 +83,25 @@ class YeastSegmentationDataset(Dataset):
         
         return bw_image, mask, loss_map
 
-    def random_sample(self, image, mask, weight_loss_matrix):
+    def random_sample(self, bw_image, mask, loss_map):
         x,y = int(numpy.random.randint((mask.shape[0]-161), size=1)), int(numpy.random.randint((mask.shape[0]-161), size=1))
-        image = image[x:x+160,y:y+160]
+        bw_image = bw_image[x:x+160,y:y+160]
         mask = mask[x:x+160,y:y+160]
-        weight_loss_matrix = weight_loss_matrix[x:x+160,y:y+160]
-        return image, mask, weight_loss_matrix
+        loss_map = loss_map[x:x+160,y:y+160]
+        return bw_image, mask, loss_map
+
+    def randomFlip(self, bw_image, mask, loss_map):
+        to_flipud =  random.choice([0,1])
+        to_fliplr =  random.choice([0,1])
+
+        if to_fliplr:
+            bw_image = numpy.fliplr(bw_image)
+            mask = numpy.fliplr(mask)
+            loss_map = numpy.fliplr(loss_map)
+
+        if to_flipud:
+            bw_image = numpy.flipud(bw_image)
+            mask = numpy.flipud(mask)
+            loss_map = numpy.flipud(loss_map)
+
+        return bw_image, mask, loss_map

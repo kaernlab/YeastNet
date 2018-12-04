@@ -12,7 +12,7 @@ import os
 ## 
 import inferNetwork
 import labelCells
-from timelapse import Timelapse
+from Timelapse import Timelapse
 from Utils.helpers import smooth
 from TestPerformance import testMeasureF
 

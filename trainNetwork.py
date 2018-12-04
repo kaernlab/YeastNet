@@ -1,27 +1,27 @@
 ## Import Librarys and Modules
 import torch
-from torch.utils.data import DataLoader
-from torch import optim
 import tensorboardX as tbX
 import pdb
 import random
 import time
 import numpy
 
+from torch.utils.data import DataLoader
+from torch import optim
+
 ## Import Custom Modules
-import processImages as pi
 import validateNetwork as valNet
 
 ## Import Custom Classes
-from processImages import YeastSegmentationDataset
+from YeastSegmentationDataset import YeastSegmentationDataset
 from defineNetwork import Net
-from weightedLoss import WeightedCrossEntropyLoss
+from WeightedCrossEntropyLoss import WeightedCrossEntropyLoss
 
 ## Start Timer, Tensorboard
 start_time = time.time()
 writer = tbX.SummaryWriter()#log_dir="./logs")
-resume = True
-k = 9
+resume = False
+k = 7
 
 ## Instantiate Net, Load Parameters, Move Net to GPU
 net = Net()
@@ -34,8 +34,6 @@ net.to(device)
 ## Load State
 if resume==False:
     ## Make Test and Validation Partitions
-    #samplingList = list(range(pi.numImages()))
-    #samples = random.sample(samplingList,153)
     samples = torch.load('sampleIDs.pt')
     
     ## Choose right samples based on k
@@ -66,9 +64,8 @@ testLoader = torch.utils.data.DataLoader(testDataSet, batch_size=1,
 criterion = WeightedCrossEntropyLoss()
 classes = ('background','cell')
 
-
 ## Epoch Loop: first loops over batches, then over v alidation set
-for epoch in range(start+1,3000):  
+for epoch in range(start,3000):  
     
     ## Batch Loop
     for i, data in enumerate(trainLoader, 0):
