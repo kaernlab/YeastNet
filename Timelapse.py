@@ -65,7 +65,7 @@ class Timelapse():
 
             tensorBW = imageBW[:,:,np.newaxis].astype(np.double)
             tensorBW = self.toTensor(tensorBW).unsqueeze_(0).float()
-            tensorBW = tensorBW.to(self.device)
+            #tensorBW = tensorBW.to(self.device)
 
             if toCrop == True:
                 tensorBW = self.centreCrop(tensorBW, dimensions)

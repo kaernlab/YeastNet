@@ -7,7 +7,6 @@ import pdb
 import cv2
 from skimage.morphology import watershed
 
-import processImages as pi
 
 
 def load_image(path):                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              

@@ -8,9 +8,9 @@ from torch import optim
 import scipy.io as sio
 
 ## Import Custom Code
-from processImages import YeastSegmentationDataset
+from YeastSegmentationDataset import YeastSegmentationDataset
 from defineNetwork import Net
-from weightedLoss import WeightedCrossEntropyLoss
+from WeightedCrossEntropyLoss import WeightedCrossEntropyLoss
 from Utils.helpers import accuracy
 
 

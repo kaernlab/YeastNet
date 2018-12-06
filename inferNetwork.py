@@ -1,4 +1,5 @@
 import torch
+import pdb
 
 from defineNetwork import Net
 
@@ -16,8 +17,13 @@ def inferNetworkBatch(images, num_images, device = "cpu"):
 
     outputs = [None] * num_images
     for idx, image in enumerate(images):
+        image = image.to(device)
+
         with torch.no_grad():
             outputs[idx] = net(image)
+
+        image = image.to(torch.device("cpu"))
+        #pdb.set_trace()
 
     return outputs
 

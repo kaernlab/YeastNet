@@ -29,7 +29,7 @@ def makeTL(imagedir):
     tl = Timelapse(device = device, image_dir = imagedir)
 
     # Load image for inference 
-    tl.loadImages(normalize = True, dimensions = 1024, toCrop = False)
+    tl.loadImages(normalize = True, dimensions = 1024, toCrop = True)
     # Pass Image to Inference script, return predicted Mask
     predictions = inferNetwork.inferNetworkBatch(images = tl.tensorsBW, num_images = tl.num_images, device = device)
     tl.makeMasks(predictions)
@@ -48,6 +48,7 @@ def makeTL(imagedir):
         tl.centroids[idx], tl.contouredImages[idx], tl.labels[idx], tl.areas[idx] = labelCells.label_cells(np.array(mask), np.array(imageBW))
         imageio.imwrite(tl.image_dir + 'Results/' + str(idx) + 'Labels.png', tl.labels[idx])
         imageio.imwrite(tl.image_dir + 'Results/' + str(idx) + 'Overlay.png', tl.contouredImages[idx])
+        imageio.imwrite(tl.image_dir + 'Results/' + str(idx) + 'BWimage.png', imageBW)
 
     tl.cellTrack()
 
@@ -79,5 +80,5 @@ def showTraces(tl):
 tl = makeTL(imagedir)
 #with open(imagedir + 'Results/timelapse.pkl', 'rb') as f:
 #    tl = pickle.load(f)
-testMeasureF(tl, makeTG=False)
+#testMeasureF(tl, makeTG=False)
 #showTraces(tl)
