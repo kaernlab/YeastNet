@@ -21,7 +21,7 @@ class YeastSegmentationDataset(Dataset):
         self.list_IDs = list_IDs
         self.all_data = list(range(len(os.listdir('Training Data 1D/Images'))))
         self.rotate = random_rotate
-        self.flip = random_rotate
+        self.flip = random_flip
 
     def __len__(self):
         return len(self.list_IDs)

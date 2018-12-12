@@ -20,8 +20,8 @@ from WeightedCrossEntropyLoss import WeightedCrossEntropyLoss
 ## Start Timer, Tensorboard
 start_time = time.time()
 writer = tbX.SummaryWriter()#log_dir="./logs")
-resume = False
-k = 7
+resume = True
+k = 4
 
 ## Instantiate Net, Load Parameters, Move Net to GPU
 net = Net()
@@ -52,7 +52,7 @@ else:
     optimizer.load_state_dict(checkpoint['optimizer'])
 
 ## Instantiate Training and Validation DataLoaders
-trainDataSet = YeastSegmentationDataset(trainIDs, crop_size = 256, random_rotate = True)
+trainDataSet = YeastSegmentationDataset(trainIDs, crop_size = 512, random_rotate = False)
 trainLoader = torch.utils.data.DataLoader(trainDataSet, batch_size=4,
                                           shuffle=True, num_workers=0)
 
@@ -65,7 +65,7 @@ criterion = WeightedCrossEntropyLoss()
 classes = ('background','cell')
 
 ## Epoch Loop: first loops over batches, then over v alidation set
-for epoch in range(start,3000):  
+for epoch in range(start,4000):  
     
     ## Batch Loop
     for i, data in enumerate(trainLoader, 0):
