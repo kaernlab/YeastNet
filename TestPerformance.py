@@ -9,10 +9,10 @@ from scipy.optimize import linear_sum_assignment
 from Utils.helpers import centreCrop
 
 
-def testMeasureF(tl, singleFile = True, makeTG = False): #, testPrediction = False, makeTG = False
+def testMeasureF(tl, singleFile = True, makeTG = False, platform = 'YeastNet'): #, testPrediction = False, makeTG = False
 
     if singleFile:
-        with open(tl.image_dir + 'Results/YeastNet/yn_seg.csv', 'w', newline='') as csvfile:
+        with open(tl.image_dir + 'Results/' + platform + '/yn_seg.csv', 'w', newline='') as csvfile:
             fieldnames = ['Frame_Number','Cell_number', 'Cell_colour', 'Position_X', 'Position_Y']
             writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
 
