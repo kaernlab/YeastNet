@@ -1,7 +1,6 @@
 import numpy as np
 import scipy.io as sio
 from scipy import ndimage
-from processImages import show_image
 import matplotlib.pyplot as plt
 
 
