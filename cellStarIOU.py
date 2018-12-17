@@ -8,6 +8,7 @@
 
 import matplotlib.pyplot as pyplot
 import scipy.io as sio
+import imageio
 import numpy as np
 import cv2
 import csv 
@@ -16,19 +17,25 @@ import matplotlib.pyplot as pp
 from Utils.helpers import accuracy
 from Utils.helpers import centreCrop
 from TestPerformance import testMeasureF 
-kernel = np.ones((2,2), np.uint8)
 
-pred_path = 'C:/Users/salemd/Desktop/z2cellstar/'
+
+
+
+kernel = np.ones((2,2), np.uint8)
+pred_path = 'C:/Users/Danny/Desktop/CellStar/Test Images/Cropped/z1/segments/'
 runningIoU = 0
+
+
+
 for idx in range(1,52):
-    pred_mask_name = 'z2_t_000_000_%03d_BF_segmentation.mat' % idx
+    pred_mask_name = 'z1_t_000_000_%03d_BF_segmentation.mat' % idx
     pred_mask =  sio.loadmat(pred_path + pred_mask_name)
     pred_mask = (pred_mask['segments'] != 0)*1
 
     true_mask = sio.loadmat('Training Data 1D/Masks/mask' + str(idx-1) + '.mat')
     true_mask = (true_mask['LAB_orig'] != 0)*1
 
-    pred_mask = centreCrop(pred_mask, 1024)
+    #pred_mask = centreCrop(pred_mask, 1024)
     true_mask = centreCrop(true_mask, 1024)
     PixAccuracy, IntOfUnion = accuracy(true_mask, pred_mask)
 
@@ -36,6 +43,9 @@ for idx in range(1,52):
 
 print(runningIoU / 51)
 
+
+
+'''
 with open(pred_path + '/yn_seg.csv', 'w', newline='') as csvfile:
     fieldnames = ['Frame_Number','Cell_number', 'Cell_colour', 'Position_X', 'Position_Y']
     writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
@@ -59,3 +69,4 @@ with open(pred_path + '/yn_seg.csv', 'w', newline='') as csvfile:
                 'Cell_colour': 0,
                 'Position_X': pred[0],
                 'Position_Y': pred[1]})
+'''

@@ -8,12 +8,15 @@ import pickle
 import matplotlib.pyplot as plt
 import cv2
 import argparse
+import scipy.io as sio
 import os
 ## 
 import inferNetwork
 import labelCells
 from Timelapse import Timelapse
 from Utils.helpers import smooth
+from Utils.helpers import accuracy
+from Utils.helpers import centreCrop
 from TestPerformance import testMeasureF
 
 ## Parse Arguments
@@ -77,8 +80,24 @@ def showTraces(tl):
 
     plt.show()
 
+
+def getAccuracy(tl):
+
+    for idx, pred_mask in enumerate(tl.masks):
+
+        true_mask = sio.loadmat('Training Data 1D/Masks/mask' + str(idx) + '.mat')
+        true_mask = (true_mask['LAB_orig'] != 0)*1
+        true_mask = centreCrop(true_mask, 1024)
+
+        PixAccuracy, IntOfUnion = accuracy(true_mask, pred_mask)
+
+
+        return IntOfUnion[1]
+
 tl = makeTL(imagedir)
 #with open(imagedir + 'Results/timelapse.pkl', 'rb') as f:
 #    tl = pickle.load(f)
 #testMeasureF(tl, makeTG=False)
+print(getAccuracy(tl))
+
 #showTraces(tl)
