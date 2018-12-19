@@ -10,6 +10,7 @@ import cv2
 import argparse
 import scipy.io as sio
 import os
+import shutil
 ## 
 import inferNetwork
 import labelCells
@@ -21,7 +22,7 @@ from TestPerformance import testMeasureF
 
 ## Parse Arguments
 parser = argparse.ArgumentParser()
-parser.add_argument("--imagedir", type=str, help="input string of image directory", default="Test")
+parser.add_argument("--imagedir", type=str, help="input string of image directory", default="")
 args = parser.parse_args()
 
 imagedir = args.imagedir
@@ -93,6 +94,26 @@ def getAccuracy(tl):
 
 
         return IntOfUnion[1]
+
+
+def makeImageFolder():
+    checkpoint = torch.load('model_cp1.pt')
+    testIDs = checkpoint['testIDs']
+
+    if not os.path.isdir(tl.image_dir + 'CrossValAcc'):
+        os.mkdir(tl.image_dir + 'CrossValAcc')
+        os.mkdir(tl.image_dir + 'CrossValAcc/Model1')
+
+    for testID in testIDs:
+        filename = 'im%03d.mat' % testID
+        location = 'Training Data 1D/Images/'
+        destination = tl.image_dir + 'CrossValAcc/Model1/'
+        shutil.copy2(location + filename, destination + filename)
+
+        
+
+
+
 
 #tl = makeTL(imagedir)
 with open(imagedir + 'Results/timelapse.pkl', 'rb') as f:

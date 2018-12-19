@@ -16,7 +16,7 @@ import PIL.ImageFont as ImageFont
 from Utils.helpers import centreCrop
 
 class Timelapse():
-    def __init__(self, device, image_dir = "inference"):
+    def __init__(self, device, image_dir):
         self.device = device
         self.toTensor = tv.transforms.ToTensor() 
         self.image_dir = image_dir
