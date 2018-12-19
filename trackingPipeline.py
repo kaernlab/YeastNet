@@ -94,10 +94,10 @@ def getAccuracy(tl):
 
         return IntOfUnion[1]
 
-tl = makeTL(imagedir)
-#with open(imagedir + 'Results/timelapse.pkl', 'rb') as f:
-#    tl = pickle.load(f)
-#testMeasureF(tl, makeTG=False)
-print(getAccuracy(tl))
+#tl = makeTL(imagedir)
+with open(imagedir + 'Results/timelapse.pkl', 'rb') as f:
+    tl = pickle.load(f)
+testMeasureF(tl, makeTG=True)
+#print(getAccuracy(tl))
 
 #showTraces(tl)
