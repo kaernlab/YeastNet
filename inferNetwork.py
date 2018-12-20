@@ -4,11 +4,11 @@ import pdb
 from defineNetwork import Net
 
 
-def inferNetworkBatch(images, num_images, device = "cpu"):
+def inferNetworkBatch(images, num_images, device = "cpu", model_path = "Current Model/model_cp.pt"):
     ## Instantiate Net, load parameters
     net = Net()
     net.eval()
-    checkpoint = torch.load("Current Model/model_cp.pt")
+    checkpoint = torch.load(model_path)
     net.load_state_dict(checkpoint['network'])
 
     ## Move Net to GPU

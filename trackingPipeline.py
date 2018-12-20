@@ -23,19 +23,22 @@ from TestPerformance import testMeasureF
 ## Parse Arguments
 parser = argparse.ArgumentParser()
 parser.add_argument("--imagedir", type=str, help="input string of image directory", default="")
+parser.add_argument("--model", type=str, help="Cross Validation model number to use", default="0")
 args = parser.parse_args()
 
 imagedir = args.imagedir
+model_num = args.model
 
 ##
-def makeTL(imagedir):
+def makeTL(imagedir, crossval):
+    model_path = 'CrossVal Models/model_cp' + str(crossval) + '.pt'
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
     tl = Timelapse(device = device, image_dir = imagedir)
 
     # Load image for inference 
     tl.loadImages(normalize = True, dimensions = 1024, toCrop = True)
     # Pass Image to Inference script, return predicted Mask
-    predictions = inferNetwork.inferNetworkBatch(images = tl.tensorsBW, num_images = tl.num_images, device = device)
+    predictions = inferNetwork.inferNetworkBatch(images = tl.tensorsBW, num_images = tl.num_images, device = device, model_path = model_path)
     tl.makeMasks(predictions)
 
     # Make folder if doesnt exist
@@ -82,43 +85,51 @@ def showTraces(tl):
     plt.show()
 
 
-def getAccuracy(tl):
+def getAccuracy(tl, model_num = 0):
+    runningIOU = 0
+    checkpoint = torch.load('model_cp' + str(model_num) + '.pt')
+    testIDs = checkpoint['testID']
+    testIDs.sort()
 
-    for idx, pred_mask in enumerate(tl.masks):
+    for testID, pred_mask in zip(testIDs, tl.labels):
 
-        true_mask = sio.loadmat('Training Data 1D/Masks/mask' + str(idx) + '.mat')
+        true_mask = sio.loadmat('Training Data 1D/Masks/mask' + str(testID) + '.mat')
         true_mask = (true_mask['LAB_orig'] != 0)*1
         true_mask = centreCrop(true_mask, 1024)
-
+        #pdb.set_trace()
+        pred_mask = (pred_mask != 0)*1
         PixAccuracy, IntOfUnion = accuracy(true_mask, pred_mask)
 
+        runningIOU += IntOfUnion[1]
+    
+    return runningIOU / tl.num_images
 
-        return IntOfUnion[1]
 
+def makeImageFolder(model_num):
+    checkpoint = torch.load('model_cp' + str(model_num) + '.pt')
+    testIDs = checkpoint['testID']
 
-def makeImageFolder():
-    checkpoint = torch.load('model_cp1.pt')
-    testIDs = checkpoint['testIDs']
-
-    if not os.path.isdir(tl.image_dir + 'CrossValAcc'):
-        os.mkdir(tl.image_dir + 'CrossValAcc')
-        os.mkdir(tl.image_dir + 'CrossValAcc/Model1')
+    if not os.path.isdir(imagedir + 'CrossValAcc/Model' + str(model_num)):
+        os.mkdir(imagedir + 'CrossValAcc/Model' + str(model_num))
 
     for testID in testIDs:
-        filename = 'im%03d.mat' % testID
-        location = 'Training Data 1D/Images/'
-        destination = tl.image_dir + 'CrossValAcc/Model1/'
+        filename = '/im%03d.tif' % testID
+        location = './Training Data 1D/Images'
+        destination = imagedir + './CrossValAcc/Model'  + str(model_num)
         shutil.copy2(location + filename, destination + filename)
 
-        
+
+## Make folders of Images for Testing CrossVal Models
+#for model_num in range(2,8):
+
+#makeImageFolder(0)
 
 
 
-
-#tl = makeTL(imagedir)
-with open(imagedir + 'Results/timelapse.pkl', 'rb') as f:
-    tl = pickle.load(f)
+tl = makeTL(imagedir, model_num)
+#with open(imagedir + 'Results/timelapse.pkl', 'rb') as f:
+#    tl = pickle.load(f)
 testMeasureF(tl, makeTG=True)
-#print(getAccuracy(tl))
+print(getAccuracy(tl, model_num))
 
 #showTraces(tl)
