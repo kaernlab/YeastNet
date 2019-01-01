@@ -6,33 +6,37 @@
 # which will be reported against the same measures from YeastNet.
 # 
 
-import matplotlib.pyplot as pyplot
 import scipy.io as sio
-import imageio
 import numpy as np
 import cv2
 import csv 
 import pdb
-import matplotlib.pyplot as pp
+import torch
 from Utils.helpers import accuracy
 from Utils.helpers import centreCrop
-from TestPerformance import testMeasureF 
 
 
 
-
+model = 2
 kernel = np.ones((2,2), np.uint8)
-pred_path = 'C:/Users/Danny/Desktop/CellStar/Test Images/Cropped/z1/segments/'
+pred_path = 'C:/Users/Danny/Desktop/yeast-net/CrossValAcc/Model' + str(model) + '/CellStar/segments/'
 runningIoU = 0
 
+cp = torch.load('model_cp' + str(model) + '.pt')
+testIDs = cp['testID']
 
+for idx in testIDs:
+    if idx < 51:
+        pred_mask_name = 'z1_t_000_000_%03d_BF_segmentation.mat' % (idx+1)
+    elif idx > 101:
+        pred_mask_name = 'z3_t_000_000_%03d_BF_segmentation.mat' % (idx-101)
+    else:
+        pred_mask_name = 'z2_t_000_000_%03d_BF_segmentation.mat' % (idx-50)
 
-for idx in range(1,52):
-    pred_mask_name = 'z1_t_000_000_%03d_BF_segmentation.mat' % idx
     pred_mask =  sio.loadmat(pred_path + pred_mask_name)
     pred_mask = (pred_mask['segments'] != 0)*1
 
-    true_mask = sio.loadmat('Training Data 1D/Masks/mask' + str(idx-1) + '.mat')
+    true_mask = sio.loadmat('Training Data 1D/Masks/mask' + str(idx) + '.mat')
     true_mask = (true_mask['LAB_orig'] != 0)*1
 
     #pred_mask = centreCrop(pred_mask, 1024)
@@ -41,7 +45,7 @@ for idx in range(1,52):
 
     runningIoU += IntOfUnion[1]
 
-print(runningIoU / 51)
+print(runningIoU / 15)
 
 
 
