@@ -4,13 +4,12 @@ import tensorboardX as tbX
 import pdb
 import random
 import time
-import numpy
 
 from torch.utils.data import DataLoader
 from torch import optim
 
 ## Import Custom Modules
-import validateNetwork as valNet
+import validateNetwork
 
 ## Import Custom Classes
 from YeastSegmentationDataset import YeastSegmentationDataset
@@ -21,7 +20,7 @@ from WeightedCrossEntropyLoss import WeightedCrossEntropyLoss
 start_time = time.time()
 writer = tbX.SummaryWriter()#log_dir="./logs")
 resume = True
-k = 4
+k = 5
 
 ## Instantiate Net, Load Parameters, Move Net to GPU
 net = Net()
@@ -52,11 +51,11 @@ else:
     optimizer.load_state_dict(checkpoint['optimizer'])
 
 ## Instantiate Training and Validation DataLoaders
-trainDataSet = YeastSegmentationDataset(trainIDs, crop_size = 512, random_rotate = False)
-trainLoader = torch.utils.data.DataLoader(trainDataSet, batch_size=4,
+trainDataSet = YeastSegmentationDataset(trainIDs, crop_size = 1024, random_rotate = True)
+trainLoader = torch.utils.data.DataLoader(trainDataSet, batch_size=1,
                                           shuffle=True, num_workers=0)
 
-testDataSet = YeastSegmentationDataset(testIDs, crop_size = 512)
+testDataSet = YeastSegmentationDataset(testIDs, crop_size = 1024)
 testLoader = torch.utils.data.DataLoader(testDataSet, batch_size=1,
                                          shuffle=False, num_workers=0)
 
@@ -65,7 +64,7 @@ criterion = WeightedCrossEntropyLoss()
 classes = ('background','cell')
 
 ## Epoch Loop: first loops over batches, then over v alidation set
-for epoch in range(start,4000):  
+for epoch in range(start,4700):  
     
     ## Batch Loop
     for i, data in enumerate(trainLoader, 0):
@@ -102,7 +101,7 @@ for epoch in range(start,4000):
 
     ## Epoch validation
     #print('\n\nValidating.... Please Hold')
-    val_acc = valNet.validate(net, device, testLoader, criterion, saveImages=True)
+    val_acc = validateNetwork.validate(net, device, testLoader, criterion, saveImages=True)
     print('[%d, %d] IntOfUnion (Cell): %.5f \n' % (iteration, epoch + 1, val_acc))
     writer.add_scalar('Validation Cell IOU', val_acc, epoch)
     ## Epoch Time

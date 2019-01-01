@@ -1,17 +1,9 @@
 import imageio
 import numpy as np
-import matplotlib.pyplot as plt
-import scipy.io as sio
-import os
 import pdb
 import cv2
 from skimage.morphology import watershed
-
-
-
-def load_image(path):                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              
-    image = imageio.imread(path) 
-    return image
+from Utils.helpers import load_image
 
 def label_cells(mask, bw_image):
 

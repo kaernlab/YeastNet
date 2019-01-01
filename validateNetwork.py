@@ -16,7 +16,7 @@ def validate(net, device, testLoader, criterion, saveImages = False):
     runningIOU = 0
 
     ## Loop over batches
-    for i, data in enumerate(testLoader, 0):
+    for i, data in enumerate(testLoader, 1):
         ## Get inputs and transfer to GPU
         validationImage, mask, lossWeightMap = data
         validationImage = validationImage.to(device)

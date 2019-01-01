@@ -31,7 +31,7 @@ model_num = args.model
 
 ##
 def makeTL(imagedir, crossval):
-    model_path = 'CrossVal Models/model_cp' + str(crossval) + '.pt'
+    model_path = 'model_cp' + str(crossval) + '.pt'
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
     tl = Timelapse(device = device, image_dir = imagedir)
 
@@ -91,8 +91,7 @@ def getAccuracy(tl, model_num = 0):
     testIDs = checkpoint['testID']
     testIDs.sort()
 
-    for testID, pred_mask in zip(testIDs, tl.labels):
-
+    for testID, pred_mask in zip(testIDs, tl.masks):
         true_mask = sio.loadmat('Training Data 1D/Masks/mask' + str(testID) + '.mat')
         true_mask = (true_mask['LAB_orig'] != 0)*1
         true_mask = centreCrop(true_mask, 1024)
@@ -129,7 +128,7 @@ def makeImageFolder(model_num):
 tl = makeTL(imagedir, model_num)
 #with open(imagedir + 'Results/timelapse.pkl', 'rb') as f:
 #    tl = pickle.load(f)
-testMeasureF(tl, makeTG=True)
+testMeasureF(tl, makeTG=False)
 print(getAccuracy(tl, model_num))
 
 #showTraces(tl)
