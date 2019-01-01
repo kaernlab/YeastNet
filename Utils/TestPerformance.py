@@ -1,11 +1,8 @@
 import csv
 import cv2
-import imageio
 import os
 import pdb
 from scipy import io
-from scipy.spatial.distance import cdist
-from scipy.optimize import linear_sum_assignment
 from Utils.helpers import centreCrop
 
 
@@ -30,6 +27,8 @@ def testMeasureF(tl, singleFile = True, makeTG = False, platform = 'YeastNet'): 
                         })
 
     else:
+        ## Rarely if ever used, *not updated for tracking yet*
+
         for frameID in range(tl.num_images):
 
             predCent = tl.centroids[frameID]
@@ -48,6 +47,7 @@ def testMeasureF(tl, singleFile = True, makeTG = False, platform = 'YeastNet'): 
 
 
     if makeTG == True:
+        ## Makes GroundTruth csv file for Seg/Tracking Accuracy measurement. 
 
 
         if not os.path.isdir(tl.image_dir + 'Results/GroundTruth'):
@@ -77,25 +77,3 @@ def testMeasureF(tl, singleFile = True, makeTG = False, platform = 'YeastNet'): 
                         'Position_Y': true[1],
                         'Unique_cell_number': int(mask[[int(true[1])],[int(true[0])]])
                         })
-
-
-'''        
-        ## Testing Generally done using Evaluation Platform, This is no longer needed
-        if testPrediction == True:
-            centroidDiff = cdist(predCent, trueCent, 'euclidean')
-            firstLabels, secondLabels = linear_sum_assignment(centroidDiff)
-
-            accurateSeg = 0
-            trueSeg = len(trueCent)
-
-
-            for pred, true  in zip(firstLabels,secondLabels):
-                
-                print(centroidDiff[pred, true])
-                if centroidDiff[pred, true] < 5 :
-                    accurateSeg += 1
-                    
-            print(accurateSeg, trueSeg)
-            runningAcc += accurateSeg / trueSeg
-
-            print(runningAcc / tl.num_images) '''

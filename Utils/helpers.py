@@ -1,4 +1,12 @@
 import numpy as np
+import imageio 
+
+
+
+def load_image(path):         
+    ## Given a path, loads image using imageio's imread method                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     
+    image = imageio.imread(path) 
+    return image
 
 def smooth(x,window_len=5,window='flat'):
     s=np.r_[x[window_len-1:0:-1],x,x[-2:-window_len-1:-1]]
