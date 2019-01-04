@@ -17,12 +17,12 @@ from Utils.helpers import centreCrop
 
 
 
-model = 2
+model = 3
 kernel = np.ones((2,2), np.uint8)
-pred_path = 'C:/Users/Danny/Desktop/yeast-net/CrossValAcc/Model' + str(model) + '/CellStar/segments/'
+pred_path = 'C:/Users/Danny/Desktop/yeast-net/CrossValidation/CrossVal Accuracy/Model' + str(model) + '/CellStar/segments/'
 runningIoU = 0
 
-cp = torch.load('model_cp' + str(model) + '.pt')
+cp = torch.load('C:/Users/Danny/Desktop/yeast-net/CrossValidation/Finetuned Models/model_cp' + str(model) + '.pt')
 testIDs = cp['testID']
 
 for idx in testIDs:
@@ -44,6 +44,8 @@ for idx in testIDs:
     PixAccuracy, IntOfUnion = accuracy(true_mask, pred_mask)
 
     runningIoU += IntOfUnion[1]
+
+    #pdb.set_trace()
 
 print(runningIoU / 15)
 

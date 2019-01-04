@@ -6,10 +6,10 @@ from scipy import io
 from Utils.helpers import centreCrop
 
 
-def testMeasureF(tl, singleFile = True, makeTG = False, platform = 'YeastNet'): #, testPrediction = False, makeTG = False
+def makeResultsCSV(tl, singleFile = True, makeTG = False, platform = 'YeastNet'): #, testPrediction = False, makeTG = False
 
     if singleFile:
-        with open(tl.image_dir + 'Results/' + platform + '/yn_seg_and_track.csv', 'w', newline='') as csvfile:
+        with open(tl.image_dir + 'Results/yn_seg_and_track.csv', 'w', newline='') as csvfile:
             fieldnames = ['Frame_Number','Cell_number', 'Cell_colour', 'Position_X', 'Position_Y', 'Unique_cell_number']
             writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
 
@@ -33,7 +33,7 @@ def testMeasureF(tl, singleFile = True, makeTG = False, platform = 'YeastNet'): 
 
             predCent = tl.centroids[frameID]
 
-            with open(tl.image_dir + 'Results/YeastNet/yn_seg_and_track' + str(frameID) + '.csv', 'w', newline='') as csvfile:
+            with open(tl.image_dir + 'Results/yn_seg_and_track' + str(frameID) + '.csv', 'w', newline='') as csvfile:
                 fieldnames = ['Cell_number', 'Cell_colour', 'Position_X', 'Position_Y']
                 writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
 
@@ -49,11 +49,7 @@ def testMeasureF(tl, singleFile = True, makeTG = False, platform = 'YeastNet'): 
     if makeTG == True:
         ## Makes GroundTruth csv file for Seg/Tracking Accuracy measurement. 
 
-
-        if not os.path.isdir(tl.image_dir + 'Results/GroundTruth'):
-            os.mkdir(tl.image_dir + 'Results/GroundTruth')
-
-        with open(tl.image_dir + 'Results/GroundTruth/gt_seg_and_track.csv', 'w', newline='') as csvfile:
+        with open(tl.image_dir + 'Results/gt_seg_and_track.csv', 'w', newline='') as csvfile:
 
             fieldnames = ['Frame_Number','Cell_number', 'Cell_colour', 'Position_X', 'Position_Y','Unique_cell_number']
             writer = csv.DictWriter(csvfile, fieldnames=fieldnames) 

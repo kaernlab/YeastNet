@@ -20,7 +20,8 @@ from WeightedCrossEntropyLoss import WeightedCrossEntropyLoss
 start_time = time.time()
 writer = tbX.SummaryWriter()#log_dir="./logs")
 resume = True
-k = 5
+k = 9
+end = 3500
 
 ## Instantiate Net, Load Parameters, Move Net to GPU
 net = Net()
@@ -42,7 +43,7 @@ if resume==False:
     iteration = 0 #30634
     start = 0 # 1803
 else:
-    checkpoint = torch.load("model_cp" + str(k) + ".pt")
+    checkpoint = torch.load("./CrossValidation/Finetuned Models/model_cp" + str(k) + ".pt")
     testIDs = checkpoint['testID']
     trainIDs = checkpoint['trainID']
     iteration = checkpoint['iteration']
@@ -64,7 +65,7 @@ criterion = WeightedCrossEntropyLoss()
 classes = ('background','cell')
 
 ## Epoch Loop: first loops over batches, then over v alidation set
-for epoch in range(start,4700):  
+for epoch in range(start,end):  
     
     ## Batch Loop
     for i, data in enumerate(trainLoader, 0):
@@ -118,7 +119,7 @@ for epoch in range(start,4700):
         "epoch": epoch,
         "iteration": iteration
     }
-    torch.save(checkpoint, "model_cp" + str(k) + ".pt")
+    torch.save(checkpoint, "./CrossValidation/Finetuned Models/model_cp" + str(k) + ".pt")
 ## Finish
 elapsed_time = time.time() - start_time
 print('Finished Training, Duration: seconds' + str(elapsed_time))

@@ -18,20 +18,22 @@ from Timelapse import Timelapse
 from Utils.helpers import smooth
 from Utils.helpers import accuracy
 from Utils.helpers import centreCrop
-from TestPerformance import testMeasureF
+from Utils.TestPerformance import makeResultsCSV
 
 ## Parse Arguments
 parser = argparse.ArgumentParser()
 parser.add_argument("--imagedir", type=str, help="input string of image directory", default="")
-parser.add_argument("--model", type=str, help="Cross Validation model number to use", default="0")
+parser.add_argument("--model_num", type=str, help="Cross Validation model number to use", default="0")
 args = parser.parse_args()
 
 imagedir = args.imagedir
-model_num = args.model
+model_num = args.model_num
+model_path = './CrossValidation/Finetuned Models/model_cp' + str(model_num) + '.pt'
+imagedir = './CrossValidation/CrossVal Accuracy/Model' + model_num + '/'
 
 ##
 def makeTL(imagedir, crossval):
-    model_path = 'model_cp' + str(crossval) + '.pt'
+    #model_path = './CrossValidation/Finetuned Models/model_cp' + str(crossval) + '.pt'
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
     tl = Timelapse(device = device, image_dir = imagedir)
 
@@ -44,7 +46,6 @@ def makeTL(imagedir, crossval):
     # Make folder if doesnt exist
     if not os.path.isdir(tl.image_dir + 'Results'):
         os.mkdir(tl.image_dir + 'Results')
-        os.mkdir(tl.image_dir + 'Results/YeastNet')
         os.mkdir(tl.image_dir + 'Results/Tracking')
 
     for idx, mask in enumerate(tl.masks):
@@ -85,9 +86,9 @@ def showTraces(tl):
     plt.show()
 
 
-def getAccuracy(tl, model_num = 0):
+def getMeanAccuracy(tl, model_num = 0):
     runningIOU = 0
-    checkpoint = torch.load('model_cp' + str(model_num) + '.pt')
+    checkpoint = torch.load(model_path)
     testIDs = checkpoint['testID']
     testIDs.sort()
 
@@ -104,31 +105,8 @@ def getAccuracy(tl, model_num = 0):
     return runningIOU / tl.num_images
 
 
-def makeImageFolder(model_num):
-    checkpoint = torch.load('model_cp' + str(model_num) + '.pt')
-    testIDs = checkpoint['testID']
-
-    if not os.path.isdir(imagedir + 'CrossValAcc/Model' + str(model_num)):
-        os.mkdir(imagedir + 'CrossValAcc/Model' + str(model_num))
-
-    for testID in testIDs:
-        filename = '/im%03d.tif' % testID
-        location = './Training Data 1D/Images'
-        destination = imagedir + './CrossValAcc/Model'  + str(model_num)
-        shutil.copy2(location + filename, destination + filename)
-
-
-## Make folders of Images for Testing CrossVal Models
-#for model_num in range(2,8):
-
-#makeImageFolder(0)
-
-
-
 tl = makeTL(imagedir, model_num)
-#with open(imagedir + 'Results/timelapse.pkl', 'rb') as f:
-#    tl = pickle.load(f)
-testMeasureF(tl, makeTG=False)
-print(getAccuracy(tl, model_num))
-
-#showTraces(tl)
+with open(imagedir + 'Results/timelapse.pkl', 'rb') as f:
+    tl = pickle.load(f)
+makeResultsCSV(tl, makeTG=True)
+print(getMeanAccuracy(tl, model_num))
