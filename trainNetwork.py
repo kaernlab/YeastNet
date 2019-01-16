@@ -20,8 +20,8 @@ from WeightedCrossEntropyLoss import WeightedCrossEntropyLoss
 start_time = time.time()
 writer = tbX.SummaryWriter()#log_dir="./logs")
 resume = True
-k = 9
-end = 3500
+k = 6
+end = 5000
 
 ## Instantiate Net, Load Parameters, Move Net to GPU
 net = Net()

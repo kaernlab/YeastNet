@@ -17,7 +17,7 @@ from Utils.helpers import centreCrop
 
 
 
-model = 3
+model = 10
 kernel = np.ones((2,2), np.uint8)
 pred_path = 'C:/Users/Danny/Desktop/yeast-net/CrossValidation/CrossVal Accuracy/Model' + str(model) + '/CellStar/segments/'
 runningIoU = 0

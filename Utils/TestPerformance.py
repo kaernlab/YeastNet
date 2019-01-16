@@ -2,11 +2,12 @@ import csv
 import cv2
 import os
 import pdb
+import torch
 from scipy import io
 from Utils.helpers import centreCrop
 
 
-def makeResultsCSV(tl, singleFile = True, makeTG = False, platform = 'YeastNet'): #, testPrediction = False, makeTG = False
+def makeResultsCSV(tl, model_num = 0, singleFile = True, makeTG = False, platform = 'YeastNet'): #, testPrediction = False, makeTG = False
 
     if singleFile:
         with open(tl.image_dir + 'Results/yn_seg_and_track.csv', 'w', newline='') as csvfile:
@@ -49,24 +50,30 @@ def makeResultsCSV(tl, singleFile = True, makeTG = False, platform = 'YeastNet')
     if makeTG == True:
         ## Makes GroundTruth csv file for Seg/Tracking Accuracy measurement. 
 
+        model = torch.load('./CrossValidation/Finetuned Models/model_cp' + str(model_num) + '.pt')
+        testIDs = model['testID']
+        testIDs.sort()
         with open(tl.image_dir + 'Results/gt_seg_and_track.csv', 'w', newline='') as csvfile:
 
             fieldnames = ['Frame_Number','Cell_number', 'Cell_colour', 'Position_X', 'Position_Y','Unique_cell_number']
             writer = csv.DictWriter(csvfile, fieldnames=fieldnames) 
             writer.writeheader()
-            for frameID in range(tl.num_images):
 
-                mask = io.loadmat('Training Data 1D/Masks/mask' + str(frameID) + '.mat')
+
+
+            for idx, testID in enumerate(testIDs):
+
+                mask = io.loadmat('Training Data 1D/Masks/mask' + str(testID) + '.mat')
                 mask = centreCrop(mask['LAB'], 1024)
                 output = cv2.connectedComponentsWithStats(mask, 4, cv2.CV_32S)#, cv2.CCL_DEFAULT)
                 centroids = output[3]
                 trueCent = centroids[1:]
                 
 
-                predCent = tl.centroids[frameID]
+                predCent = tl.centroids[idx]
                 for cellID, true in enumerate(trueCent):
                     writer.writerow({
-                        'Frame_Number': frameID+1,
+                        'Frame_Number': idx+1,
                         'Cell_number': cellID+1,
                         'Cell_colour': 0,
                         'Position_X': true[0],

@@ -176,7 +176,7 @@ class Timelapse():
         x = []
         
         for timepoint in range(self.num_images):
-            path = self.image_dir + fp + '/z1_t_000_000_%03d_'  % (timepoint+1) + fp + '.tif'
+            path = self.image_dir + fp + '/z2_t_000_000_%03d_'  % (timepoint+1) + fp + '.tif'
             imageGFP = imio.imread(path) 
             imageGFP = self.centreCrop(imageGFP, 1024)
             #imageGFP = (imageGFP / imageGFP.max() * 255).astype('uint8')

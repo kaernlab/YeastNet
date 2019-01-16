@@ -15,6 +15,8 @@ import shutil
 import inferNetwork
 import labelCells
 from Timelapse import Timelapse
+from Utils.compareMethods import compareOld2
+from Utils.compareMethods import makeAccCSV
 from Utils.helpers import smooth
 from Utils.helpers import accuracy
 from Utils.helpers import centreCrop
@@ -29,7 +31,8 @@ args = parser.parse_args()
 imagedir = args.imagedir
 model_num = args.model_num
 model_path = './CrossValidation/Finetuned Models/model_cp' + str(model_num) + '.pt'
-imagedir = './CrossValidation/CrossVal Accuracy/Model' + model_num + '/'
+#imagedir = './CrossValidation/CrossVal Accuracy/Model' + model_num + '/'
+imagedir = './Images for Figures/BW3/'
 
 ##
 def makeTL(imagedir, crossval):
@@ -68,21 +71,29 @@ def makeTL(imagedir, crossval):
     return tl
 
 def showTraces(tl):
-
+    total = 0
     plt.figure()
-    for i in range(tl.total_cells):
+    for i in range(20):#range(tl.total_cells):
         x, gfpfl, rfpfl = tl[i]
-        if len(x)>9:
-            gfpfl = smooth(gfpfl)
-            rfpfl = smooth(rfpfl)
+        #pdb.set_trace()
+        if len(x)>30 and total<15 and i != 5:
+            total+=1
+            #gfpfl = smooth(gfpfl, window_len=5)
+            #rfpfl = smooth(rfpfl, window_len=7)
             diff = int(abs(len(x) - len(gfpfl)) / 2)
             #print(diff)
-            gfpfl = gfpfl[diff:-diff]
-            rfpfl = rfpfl[diff:-diff]
-            ratio = rfpfl / gfpfl 
+            #gfpfl = gfpfl[diff:-diff]
+            #rfpfl = rfpfl[diff:-diff]
+            ratio = np.array(rfpfl) / np.array(gfpfl) 
+            ratio = smooth(ratio, window_len=5)
+            diff = int(abs(len(x) - len(ratio)) / 2)
+            ratio = ratio[diff:-diff]
             #ratio = ratio / ratio.max()
-            plt.plot(x,ratio)
+            plt.plot(np.array(x) * 10,ratio, 'k')
 
+    #pdb.set_trace()
+    plt.ylabel('mCherry/sfGFP Fluorescence Ratio', fontsize=15)
+    plt.xlabel('Time (minutes)', fontsize=15)
     plt.show()
 
 
@@ -105,8 +116,12 @@ def getMeanAccuracy(tl, model_num = 0):
     return runningIOU / tl.num_images
 
 
-tl = makeTL(imagedir, model_num)
+#tl = makeTL(imagedir, model_num)
 with open(imagedir + 'Results/timelapse.pkl', 'rb') as f:
     tl = pickle.load(f)
-makeResultsCSV(tl, makeTG=True)
-print(getMeanAccuracy(tl, model_num))
+showTraces(tl)
+#makeResultsCSV(tl, model_num = model_num, makeTG=True)
+#print(compareOld2(model_path))
+#print(getMeanAccuracy(tl, model_num))
+
+#makeAccCSV(model_path, imagedir)
