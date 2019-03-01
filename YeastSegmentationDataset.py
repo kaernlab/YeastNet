@@ -14,7 +14,7 @@ import torchvision.transforms.functional as TF
 #Define Dataset Class
 class YeastSegmentationDataset(Dataset):
 
-    def __init__(self, list_IDs, transform=None, crop_size = 512, random_rotate = False, random_flip = False):
+    def __init__(self, list_IDs, transform=None, crop_size = 512, random_rotate = False, random_flip = False, no_og_data = False):
         self.ToTensor = TV.ToTensor()
         self.ToPILImage = TV.ToPILImage()
         self.crop_size = crop_size
@@ -22,6 +22,7 @@ class YeastSegmentationDataset(Dataset):
         self.all_data = list(range(len(os.listdir('Training Data 1D/Images'))))
         self.rotate = random_rotate
         self.flip = random_flip
+        self.no_og_data = no_og_data
 
     def __len__(self):
         return len(self.list_IDs)
@@ -34,7 +35,7 @@ class YeastSegmentationDataset(Dataset):
         bw_image = self.centerCrop(self.normalize(bw_image, bw_image.mean(), bw_image.std()), self.crop_size)
 
         if self.rotate:
-            bw_image, mask, weight_loss_matrix = self.randomRotate(bw_image, mask, weight_loss_matrix)
+            bw_image, mask, weight_loss_matrix = self.randomRotate(bw_image, mask, weight_loss_matrix, self.no_og_data)
         if self.flip:
             bw_image, mask, weight_loss_matrix = self.randomFlip(bw_image, mask, weight_loss_matrix)
 
@@ -74,8 +75,13 @@ class YeastSegmentationDataset(Dataset):
         plt.imshow(image)  
         plt.show()
 
-    def randomRotate(self, bw_image, mask, loss_map):
-        angle = random.choice([1, 2, 3, 4])
+    def randomRotate(self, bw_image, mask, loss_map, no_og_data):
+        if no_og_data:
+            angle = random.choice([2, 3, 4])
+        else:
+            angle = random.choice([1, 2, 3, 4])
+
+        
         for rotations in range(angle):
             bw_image = numpy.rot90(bw_image) - numpy.zeros_like(bw_image)
             mask = numpy.rot90(mask) - numpy.zeros_like(mask)
@@ -104,4 +110,4 @@ class YeastSegmentationDataset(Dataset):
             mask = numpy.flipud(mask)
             loss_map = numpy.flipud(loss_map)
 
-        return bw_image, mask, loss_map
+        return numpy.ascontiguousarray(bw_image), numpy.ascontiguousarray(mask), numpy.ascontiguousarray(loss_map)

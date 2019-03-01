@@ -25,7 +25,7 @@ end = 5000
 
 ## Instantiate Net, Load Parameters, Move Net to GPU
 net = Net()
-optimizer = optim.SGD(net.parameters(), lr=0.01)#, momentum=0.9)
+optimizer = optim.SGD(net.parameters(), lr=0.01, momentum=0.9)
 
 ##Send Model to GPU
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
@@ -33,17 +33,14 @@ net.to(device)
 
 ## Load State
 if resume==False:
-    ## Make Test and Validation Partitions
-    samples = torch.load('sampleIDs.pt')
-    
+
     ## Choose right samples based on k
-    kid = 150-k*15
-    testIDs = samples[kid:kid+15]
-    trainIDs = samples[:kid] + samples[kid+15:]
-    iteration = 0 #30634
-    start = 0 # 1803
+    trainIDs = list(range(153))
+    testIDs = [38, 126, 52, 14, 19, 113, 147, 11, 76, 149, 90, 47]#list(range(153))
+    iteration = 0
+    start = 0
 else:
-    checkpoint = torch.load("./CrossValidation/Finetuned Models/model_cp" + str(k) + ".pt")
+    checkpoint = torch.load("./trackingtest.pt")
     testIDs = checkpoint['testID']
     trainIDs = checkpoint['trainID']
     iteration = checkpoint['iteration']
@@ -52,7 +49,7 @@ else:
     optimizer.load_state_dict(checkpoint['optimizer'])
 
 ## Instantiate Training and Validation DataLoaders
-trainDataSet = YeastSegmentationDataset(trainIDs, crop_size = 1024, random_rotate = True)
+trainDataSet = YeastSegmentationDataset(trainIDs, crop_size = 1024, random_rotate = True, random_flip = True, no_og_data = True)
 trainLoader = torch.utils.data.DataLoader(trainDataSet, batch_size=1,
                                           shuffle=True, num_workers=0)
 
@@ -102,7 +99,12 @@ for epoch in range(start,end):
 
     ## Epoch validation
     #print('\n\nValidating.... Please Hold')
-    val_acc = validateNetwork.validate(net, device, testLoader, criterion, saveImages=True)
+    if (epoch%10 == 0):
+        save_option = True
+    else:
+        save_option = False
+
+    val_acc = validateNetwork.validate(net, device, testLoader, criterion, saveImages=save_option)
     print('[%d, %d] IntOfUnion (Cell): %.5f \n' % (iteration, epoch + 1, val_acc))
     writer.add_scalar('Validation Cell IOU', val_acc, epoch)
     ## Epoch Time
@@ -110,16 +112,16 @@ for epoch in range(start,end):
     print(str(elapsed_time / 60) + 'min')
 
     ## Save Model 
-    #if True #saveCP:
-    checkpoint = {
-        "network": net.state_dict(),
-        "optimizer": optimizer.state_dict(),
-        "trainID": trainIDs,
-        "testID": testIDs,
-        "epoch": epoch,
-        "iteration": iteration
-    }
-    torch.save(checkpoint, "./CrossValidation/Finetuned Models/model_cp" + str(k) + ".pt")
+    if save_option: #saveCP:
+        checkpoint = {
+            "network": net.state_dict(),
+            "optimizer": optimizer.state_dict(),
+            "trainID": trainIDs,
+            "testID": testIDs,
+            "epoch": epoch,
+            "iteration": iteration
+        }
+        torch.save(checkpoint,  "./trackingtest.pt")
 ## Finish
 elapsed_time = time.time() - start_time
 print('Finished Training, Duration: seconds' + str(elapsed_time))

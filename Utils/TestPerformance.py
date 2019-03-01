@@ -50,9 +50,10 @@ def makeResultsCSV(tl, model_num = 0, singleFile = True, makeTG = False, platfor
     if makeTG == True:
         ## Makes GroundTruth csv file for Seg/Tracking Accuracy measurement. 
 
-        model = torch.load('./CrossValidation/Finetuned Models/model_cp' + str(model_num) + '.pt')
-        testIDs = model['testID']
-        testIDs.sort()
+        #model = torch.load('./CrossValidation/Finetuned Models/model_cp' + str(model_num) + '.pt')
+        #testIDs = model['testID']
+        #testIDs.sort()
+        testIDs = list(range(50))
         with open(tl.image_dir + 'Results/gt_seg_and_track.csv', 'w', newline='') as csvfile:
 
             fieldnames = ['Frame_Number','Cell_number', 'Cell_colour', 'Position_X', 'Position_Y','Unique_cell_number']

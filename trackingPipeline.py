@@ -24,19 +24,21 @@ from Utils.TestPerformance import makeResultsCSV
 
 ## Parse Arguments
 parser = argparse.ArgumentParser()
-parser.add_argument("--imagedir", type=str, help="input string of image directory", default="")
+parser.add_argument("--imagedir", type=str, help="Input string of image directory", default="")
 parser.add_argument("--model_num", type=str, help="Cross Validation model number to use", default="0")
+parser.add_argument("--make_plot", type=str, help="Boolean variable to choose whether fluorescence plots are desired", default=False)
 args = parser.parse_args()
 
 imagedir = args.imagedir
 model_num = args.model_num
-model_path = './CrossValidation/Finetuned Models/model_cp' + str(model_num) + '.pt'
-#imagedir = './CrossValidation/CrossVal Accuracy/Model' + model_num + '/'
-imagedir = './Images for Figures/BW3/'
+makePlots = args.make_plot
 
+imagedir = '../tracking-analysis-py/Data/stable_60/FOV4/BF/'
+model_path = './TrackingTest/trackingtest.pt'
 ##
 def makeTL(imagedir, crossval):
     #model_path = './CrossValidation/Finetuned Models/model_cp' + str(crossval) + '.pt'
+    #model_path = './TrackingTest/trackingtest.pt'
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
     tl = Timelapse(device = device, image_dir = imagedir)
 
@@ -100,8 +102,9 @@ def showTraces(tl):
 def getMeanAccuracy(tl, model_num = 0):
     runningIOU = 0
     checkpoint = torch.load(model_path)
-    testIDs = checkpoint['testID']
+    testIDs = list(range(50))#checkpoint['testID']
     testIDs.sort()
+
 
     for testID, pred_mask in zip(testIDs, tl.masks):
         true_mask = sio.loadmat('Training Data 1D/Masks/mask' + str(testID) + '.mat')
@@ -112,16 +115,19 @@ def getMeanAccuracy(tl, model_num = 0):
         PixAccuracy, IntOfUnion = accuracy(true_mask, pred_mask)
 
         runningIOU += IntOfUnion[1]
+
     
-    return runningIOU / tl.num_images
+    return runningIOU / 50
 
 
-#tl = makeTL(imagedir, model_num)
+tl = makeTL(imagedir, model_num)
 with open(imagedir + 'Results/timelapse.pkl', 'rb') as f:
     tl = pickle.load(f)
-showTraces(tl)
-#makeResultsCSV(tl, model_num = model_num, makeTG=True)
+
+if makePlots:
+    showTraces(tl)
+
+#makeResultsCSV(tl, makeTG=True)
 #print(compareOld2(model_path))
 #print(getMeanAccuracy(tl, model_num))
-
 #makeAccCSV(model_path, imagedir)
