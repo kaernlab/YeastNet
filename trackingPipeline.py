@@ -45,7 +45,7 @@ def makeTL(imagedir, crossval):
     # Load image for inference 
     tl.loadImages(normalize = True, dimensions = 1024, toCrop = True)
     # Pass Image to Inference script, return predicted Mask
-    predictions = inferNetwork.inferNetworkBatch(images = tl.tensorsBW, num_images = tl.num_images, device = device, model_path = model_path)
+    predictions = inferNetwork.inferNetwork(images = tl.tensorsBW, num_images = tl.num_images, device = device, model_path = model_path)
     tl.makeMasks(predictions)
 
     # Make folder if doesnt exist
