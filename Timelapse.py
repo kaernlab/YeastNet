@@ -36,8 +36,11 @@ class Timelapse():
         self.centreCrop = centreCrop
 
     def __getitem__(self,idx):
-        x, gfpfl = self.BuildCellTrack(idx, 'GFP')
-        x, rfpfl = self.BuildCellTrack(idx, 'RFP')
+        path= self.image_dir[:-4]
+        prefix='z2_t_000_000_'
+        suffix='_'
+        x, gfpfl, cell_area = self.BuildCellTrack(idx, fp='GFP', path = path, prefix=prefix, suffix=suffix)
+        x, rfpfl, cell_area = self.BuildCellTrack(idx, fp='RFP', path = path, prefix=prefix, suffix=suffix)
         return x, gfpfl, rfpfl
 
     def loadImages(self, dimensions = 1024, normalize = False, toCrop = True):
@@ -170,25 +173,47 @@ class Timelapse():
 
         #os.system("ffmpeg -r 5 -i ./inference/Results/Tracked/%01dTracked.png -vcodec mpeg4 -y movie.mp4")
 
-    def BuildCellTrack(self, idx, fp):
+    def BuildCellTrack(self, idx, fp='GFP', path = '', prefix = '', suffix = ''):
 
         outputfl = []
         x = []
+        cell_area = []
         
         for timepoint in range(self.num_images):
-            path = self.image_dir + fp + '/z2_t_000_000_%03d_'  % (timepoint+1) + fp + '.tif'
-            imageGFP = imio.imread(path) 
-            imageGFP = self.centreCrop(imageGFP, 1024)
-            #imageGFP = (imageGFP / imageGFP.max() * 255).astype('uint8')
+            image_path = path  + '/' +  fp + '/' + prefix + '%03d'  % (idx+1) + suffix + '.tif'
+            imageFP = imio.imread(image_path) 
+            imageFP = self.centreCrop(imageFP, 1024)
+            #imageFP = (imageFP / imageFP.max() * 255).astype('uint8')
             
             trackedLabel = np.where((self.identity[timepoint]==idx))[0]
-            if trackedLabel:
+            #pdb.set_trace()
+            if trackedLabel.size==1:
                 trackedLabel = trackedLabel[0]
                 area = self.areas[timepoint][trackedLabel]
-                fl = imageGFP[self.labels[timepoint]==trackedLabel].sum() / area
+                fl = imageFP[self.labels[timepoint]==trackedLabel].sum() / area
                 outputfl.append(fl)
+                cell_area.append(area)
                 x.append(timepoint)
         
-        return x, outputfl
-        
-        
+        return x, outputfl, cell_area
+    
+    def GetFlData(self, timepoint, fp='GFP', path = '', prefix = '', suffix = ''):
+        """ 
+        This method returns arrays containing all the data for each cell detected
+        at a timepoint. Lowest timepoint input is assumed to be 1 (therefore
+        subtracted by one for indexing)."""
+
+        outputfl = []
+        cell_area = []
+        timepointID = timepoint-1
+
+        image_path = path  + '/' +  fp + '/' + prefix + '%03d'  % (timepoint+1) + suffix + '.tif'
+        imageFP = imio.imread(image_path) 
+        imageFP = self.centreCrop(imageFP, 1024)
+        for idx, cellID in enumerate(self.identity[timepointID]):
+            area = self.areas[timepointID][idx]
+            fl = imageFP[self.labels[timepointID]==idx+1].sum() / area
+            outputfl.append(fl)
+            cell_area.append(area)
+
+        return outputfl, cell_area, self.identity[timepointID]
