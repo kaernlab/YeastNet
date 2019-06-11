@@ -158,3 +158,40 @@ def compareOld2(model_path):
         runningIOU += IntOfUnion[1]
 
     return runningIOU / 15
+
+
+def cellStarIOU(modelnum = 10):
+    """ Produce IOU measure for CellStar Output
+    
+    The Purpose of this function is to quantify the performance of
+    the CellStar Platform when used on my GT-annotated dataset. The 
+    script will generate an IOU measure, and a segmentation accuracy
+    which will be reported against the same measures from YeastNet. """
+
+    pred_path = 'C:/Users/Danny/Desktop/yeast-net/CrossValidation/CrossVal Accuracy/Model' + str(modelnum) + '/CellStar/segments/'
+    runningIoU = 0
+
+    cp = torch.load('C:/Users/Danny/Desktop/yeast-net/CrossValidation/Finetuned Models/model_cp' + str(modelnum) + '.pt')
+    testIDs = cp['testID']
+
+    for idx in testIDs:
+        if idx < 51:
+            pred_mask_name = 'z1_t_000_000_%03d_BF_segmentation.mat' % (idx+1)
+        elif idx > 101:
+            pred_mask_name = 'z3_t_000_000_%03d_BF_segmentation.mat' % (idx-101)
+        else:
+            pred_mask_name = 'z2_t_000_000_%03d_BF_segmentation.mat' % (idx-50)
+
+        pred_mask =  sio.loadmat(pred_path + pred_mask_name)
+        pred_mask = (pred_mask['segments'] != 0)*1
+
+        true_mask = sio.loadmat('Training Data 1D/Masks/mask' + str(idx) + '.mat')
+        true_mask = (true_mask['LAB_orig'] != 0)*1
+
+        true_mask = centreCrop(true_mask, 1024)
+        _, IntOfUnion = accuracy(true_mask, pred_mask)
+
+        runningIoU += IntOfUnion[1]
+
+
+    return (runningIoU / 15)
