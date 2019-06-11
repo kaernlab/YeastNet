@@ -6,7 +6,7 @@ import pickle
 import argparse
 import os
 
-from Utils.inferNetwork import inferNetwork
+from ynetmodel.inferNetwork import inferNetwork
 from Utils.labelCells import labelCells
 from Utils.Timelapse import Timelapse
 
