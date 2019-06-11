@@ -14,6 +14,7 @@ import PIL.ImageDraw as ImageDraw
 import PIL.ImageFont as ImageFont
 
 from Utils.helpers import centreCrop
+from Utils.helpers import autoCrop
 
 class Timelapse():
     def __init__(self, device, image_dir):
@@ -34,6 +35,7 @@ class Timelapse():
         self.areas = [None] * self.num_images
 
         self.centreCrop = centreCrop
+        self.autoCrop = autoCrop
 
     def __getitem__(self,idx):
         path= self.image_dir[:-4]
@@ -43,7 +45,7 @@ class Timelapse():
         x, rfpfl, cell_area = self.BuildCellTrack(idx, fp='RFP', path = path, prefix=prefix, suffix=suffix)
         return x, gfpfl, rfpfl
 
-    def loadImages(self, dimensions = 1024, normalize = False, toCrop = True):
+    def loadImages(self, force_dimensions = 1024, normalize = False, toCrop = False):
         """ Load all BrightField images.
         
         This method loops over the list of all file names in the image directory
@@ -63,6 +65,10 @@ class Timelapse():
             path = self.image_dir + image_name
             imageBW = imio.imread(path) 
 
+            if len(imageBW.shape) > 2:
+                #rgb to gray
+                imageBW = imageBW[:,:,1]
+
             if normalize:
                 imageBW = self.normalizeGrayscale(imageBW)
 
@@ -71,8 +77,11 @@ class Timelapse():
             #tensorBW = tensorBW.to(self.device)
 
             if toCrop == True:
-                tensorBW = self.centreCrop(tensorBW, dimensions)
-                imageBW = self.centreCrop(imageBW, dimensions) 
+                tensorBW = self.centreCrop(tensorBW, force_dimensions)
+                imageBW = self.centreCrop(imageBW, force_dimensions)
+            else:
+                tensorBW = self.autoCrop(tensorBW)
+                imageBW = self.autoCrop(imageBW)
 
             self.tensorsBW[idx] = tensorBW
             self.imagesBW[idx] = (imageBW / imageBW.max() * 255).astype('uint8')

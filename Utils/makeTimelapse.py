@@ -15,7 +15,7 @@ def makeTimelapse(imagedir, model_path):
     tl = Timelapse(device = device, image_dir = imagedir)
 
     # Load image for inference 
-    tl.loadImages(normalize = True, dimensions = 1024, toCrop = True)
+    tl.loadImages(normalize = True)
     
     # Pass Image to Inference script, return predicted Mask
     predictions = inferNetwork(images = tl.tensorsBW, num_images = tl.num_images, device = device, model_path = model_path)
@@ -46,3 +46,4 @@ def makeTimelapse(imagedir, model_path):
         pickle.dump(tl, f, pickle.HIGHEST_PROTOCOL)
 
     return tl
+
