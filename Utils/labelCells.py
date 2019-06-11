@@ -23,7 +23,7 @@ def label_cells(mask, bw_image):
     output = cv2.connectedComponentsWithStats(sure_fg, 4, cv2.CV_32S)#, cv2.CCL_DEFAULT) 
     num_labels = output[0]
     markers = output[1]
-    stats = output[2]
+    #stats = output[2]
     centroids = output[3]
 
     labels = watershed(-dist_transform, markers, mask=clean_mask)
@@ -34,7 +34,7 @@ def label_cells(mask, bw_image):
     areas = []
     for idx in range(1,num_labels):
         single_label_mask = (labels==idx).astype(np.uint8)
-        im2, contour, hierarchy = cv2.findContours(single_label_mask, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
+        _, contour, _ = cv2.findContours(single_label_mask, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
         contours.append(contour)
         contouredImage = cv2.drawContours(bw_image, contour, -1, (0,0,255), 1)
         areas.append(single_label_mask.sum())

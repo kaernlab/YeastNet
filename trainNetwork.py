@@ -9,12 +9,12 @@ from torch.utils.data import DataLoader
 from torch import optim
 
 ## Import Custom Modules
-import validateNetwork
+import ynetmodel.validateNetwork as validateNetwork
 
 ## Import Custom Classes
-from YeastSegmentationDataset import YeastSegmentationDataset
-from defineNetwork import Net
-from WeightedCrossEntropyLoss import WeightedCrossEntropyLoss
+from ynetmodel.YeastSegmentationDataset import YeastSegmentationDataset
+from ynetmodel.defineNetwork import Net
+from ynetmodel.WeightedCrossEntropyLoss import WeightedCrossEntropyLoss
 
 ## Start Timer, Tensorboard
 start_time = time.time()

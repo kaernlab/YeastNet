@@ -1,7 +1,7 @@
 import torch
 import pdb
 
-from defineNetwork import Net
+from ynetmodel.defineNetwork import Net
 
 
 def inferNetwork(images, num_images, device = "cpu", model_path = "Current Model/model_cp.pt"):

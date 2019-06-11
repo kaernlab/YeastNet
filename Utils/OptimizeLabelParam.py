@@ -2,12 +2,12 @@ import numpy as np
 import scipy.optimize as optimize
 import cv2
 from skimage.morphology import watershed
-from timelapse import Timelapse
+from Timelapse import Timelapse
 from scipy.spatial.distance import cdist
 from scipy.optimize import linear_sum_assignment
 import torch
 from scipy import io
-from defineNetwork import Net
+from ynetmodel.defineNetwork import Net
 import pdb
 import imageio
 
@@ -30,7 +30,7 @@ def label_cells(predMask, x0):
     output = cv2.connectedComponentsWithStats(sure_fg, 4, cv2.CV_32S)#, cv2.CCL_DEFAULT)
 
     # Extract ConnectedComponent Output
-    num_labels = output[0]
+    #num_labels = output[0]
     markers = output[1]
     centroids = output[3]
  
