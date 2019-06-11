@@ -5,7 +5,7 @@ import cv2
 from skimage.morphology import watershed
 from Utils.helpers import load_image
 
-def label_cells(mask, bw_image):
+def labelCells(mask, bw_image):
 
     ## Loads a predicted mask and detects individual cells in the image.
     bw_image = np.dstack((bw_image,bw_image,bw_image)) 

@@ -6,9 +6,9 @@ import pickle
 import argparse
 import os
 
-import inferNetwork
-import labelCells
-from Timelapse import Timelapse
+from Utils.inferNetwork import inferNetwork
+from Utils.labelCells import labelCells
+from Utils.Timelapse import Timelapse
 
 def makeTimelapse(imagedir, model_path):
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
@@ -18,7 +18,7 @@ def makeTimelapse(imagedir, model_path):
     tl.loadImages(normalize = True, dimensions = 1024, toCrop = True)
     
     # Pass Image to Inference script, return predicted Mask
-    predictions = inferNetwork.inferNetwork(images = tl.tensorsBW, num_images = tl.num_images, device = device, model_path = model_path)
+    predictions = inferNetwork(images = tl.tensorsBW, num_images = tl.num_images, device = device, model_path = model_path)
     tl.makeMasks(predictions)
 
     # Make folder if doesnt exist
@@ -31,7 +31,7 @@ def makeTimelapse(imagedir, model_path):
 
     # Pass Mask into cell labeling script, return labelled cells 
     for idx, (imageBW, mask) in enumerate(zip(tl.imagesBW, tl.masks)):
-        tl.centroids[idx], tl.contouredImages[idx], tl.labels[idx], tl.areas[idx] = labelCells.label_cells(np.array(mask), np.array(imageBW))
+        tl.centroids[idx], tl.contouredImages[idx], tl.labels[idx], tl.areas[idx] = labelCells(np.array(mask), np.array(imageBW))
         imageio.imwrite(tl.image_dir + 'Results/' + str(idx) + 'Labels.png', tl.labels[idx])
         imageio.imwrite(tl.image_dir + 'Results/' + str(idx) + 'Overlay.png', tl.contouredImages[idx])
         imageio.imwrite(tl.image_dir + 'Results/' + str(idx) + 'BWimage.png', imageBW)

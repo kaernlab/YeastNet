@@ -1,5 +1,5 @@
 import torch.nn as nn
-from netParts import *
+from ynetmodel.netParts import *
 
 class Net(nn.Module):
     def __init__(self):
