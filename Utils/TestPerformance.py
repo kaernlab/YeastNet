@@ -132,7 +132,6 @@ def makeAccCSV(model_path, image_dir):
 def compareOld2(model_path):
 
     runningIOU = 0
-    runningPA = 0
     checkpoint = torch.load(model_path)
     testIDs = checkpoint['testID']
     testIDs.sort()
@@ -153,11 +152,11 @@ def compareOld2(model_path):
         pred_mask = (pred_mask['LAB_orig'] != 0)*1
         pred_mask = centreCrop(pred_mask, 1024)
 
-        PixAccuracy, IntOfUnion = accuracy(true_mask, pred_mask)
+        _, IntOfUnion = accuracy(true_mask, pred_mask)
         #pdb.set_trace()
         runningIOU += IntOfUnion[1]
 
-    return runningIOU / 15
+    return (runningIOU / len(testIDs))
 
 
 def cellStarIOU(modelnum = 10):
@@ -169,7 +168,7 @@ def cellStarIOU(modelnum = 10):
     which will be reported against the same measures from YeastNet. """
 
     pred_path = 'C:/Users/Danny/Desktop/yeast-net/CrossValidation/CrossVal Accuracy/Model' + str(modelnum) + '/CellStar/segments/'
-    runningIoU = 0
+    runningIOU = 0
 
     cp = torch.load('C:/Users/Danny/Desktop/yeast-net/CrossValidation/Finetuned Models/model_cp' + str(modelnum) + '.pt')
     testIDs = cp['testID']
@@ -191,7 +190,34 @@ def cellStarIOU(modelnum = 10):
         true_mask = centreCrop(true_mask, 1024)
         _, IntOfUnion = accuracy(true_mask, pred_mask)
 
-        runningIoU += IntOfUnion[1]
+        runningIOU += IntOfUnion[1]
 
 
-    return (runningIoU / 15)
+    return (runningIOU / len(testIDs))
+
+def getMeanAccuracy(tl, model_path = './'):
+    ''' Generate a Mean IOU for a YeastNet Model
+    
+    This method accepts a model checkpoint and a timelapse
+    object and loops over the test set associated with the
+    model to get a set of cell IOU measurements. It then outputs
+    a mean cell IOU.'''
+    
+    runningIOU = 0
+    checkpoint = torch.load(model_path)
+    testIDs = checkpoint['testID']
+    testIDs.sort()
+
+
+    for testID, pred_mask in zip(testIDs, tl.masks):
+        true_mask = sio.loadmat('Training Data 1D/Masks/mask' + str(testID) + '.mat')
+        true_mask = (true_mask['LAB_orig'] != 0)*1
+        true_mask = centreCrop(true_mask, 1024)
+        pred_mask = (pred_mask != 0)*1
+        _, IntOfUnion = accuracy(true_mask, pred_mask)
+
+        runningIOU += IntOfUnion[1]
+
+    
+    return (runningIOU / len(testIDs))
+
