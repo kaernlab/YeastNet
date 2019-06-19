@@ -179,8 +179,7 @@ def cellStarIOU(modelnum = 10):
     
     The Purpose of this function is to quantify the performance of
     the CellStar Platform when used on my GT-annotated dataset. The 
-    script will generate an IOU measure, and a segmentation accuracy
-    which will be reported against the same measures from YeastNet. """
+    script will generate an IOU measure"""
 
     pred_path = 'C:/Users/Danny/Desktop/yeast-net/CrossValidation/CrossVal Accuracy/Model' + str(modelnum) + '/CellStar/segments/'
     runningIOU = 0
@@ -203,6 +202,36 @@ def cellStarIOU(modelnum = 10):
         true_mask = (true_mask['LAB_orig'] != 0)*1
 
         true_mask = centreCrop(true_mask, 1024)
+        _, IntOfUnion = accuracy(true_mask, pred_mask)
+
+        runningIOU += IntOfUnion[1]
+
+
+    return (runningIOU / len(testIDs))
+
+def yeastSpotterIOU(data_folder="./"):
+    """ Produce IOU measure for YeastSpotter Output
+    
+    The Purpose of this function is to quantify the performance of
+    the YeastSpotter Platform. The script will generate an IOU measure"""
+
+    data_folder = './Datasets/YITDataset1/'
+    mask_folder = data_folder + 'Masks/'
+    results_folder = data_folder + 'YSresults/'
+    filetype = '.tif'
+    runningIOU = 0
+    testIDs = list(range(60))
+
+    for testID in testIDs:
+
+        
+        pred_mask = imageio.imread(results_folder + ('im%03d' % testID) + filetype)
+        pred_mask = (pred_mask != 0)*1
+ 
+
+        true_mask = imageio.imread(mask_folder + "mask" + str(testID) + filetype)
+        true_mask = (true_mask != 0)*1
+
         _, IntOfUnion = accuracy(true_mask, pred_mask)
 
         runningIOU += IntOfUnion[1]
