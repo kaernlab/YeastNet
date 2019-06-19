@@ -10,6 +10,13 @@ from Utils.helpers import accuracy
 
 
 def makeResultsCSV(tl, model_num = 0, singleFile = True, makeTG = False, platform = 'YeastNet'): #, testPrediction = False, makeTG = False
+    ''' Make csv with seg/tracking results
+    
+    Given a model path and an image directory, the segmentation 
+    and tracking results are compiled into a csv file that
+    can be used to benchmark performance using the YIT-Benchmark. THe same
+    comparison made in the CEllStar paper. It can also make a ground truth csv file
+    as required by YIT-Benchmark'''
 
     if singleFile:
         with open(tl.image_dir + 'Results/yn_seg_and_track.csv', 'w', newline='') as csvfile:
@@ -85,6 +92,13 @@ def makeResultsCSV(tl, model_num = 0, singleFile = True, makeTG = False, platfor
                         })
 
 def makeAccCSV(model_path, image_dir):
+    ''' Make csv with seg/tracking results of Old Method
+    
+    Given a model path and an image directory, the segmentation 
+    and tracking results of our Old Method, heavily modified version
+    of the Doncic et al. (2013) method are compiled into a csv file that
+    can be used to benchmark performance using the YIT-Benchmark. THe same
+    comparison made in the CEllStar paper.'''
 
     checkpoint = torch.load(model_path)
     testIDs = checkpoint['testID']
