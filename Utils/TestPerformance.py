@@ -5,6 +5,7 @@ import pdb
 import torch
 import scipy.io as sio
 import numpy as np
+import imageio
 from Utils.helpers import centreCrop
 from Utils.helpers import accuracy
 
@@ -209,7 +210,7 @@ def cellStarIOU(modelnum = 10):
 
     return (runningIOU / len(testIDs))
 
-def getMeanAccuracy(tl, model_path = './'):
+def getMeanAccuracy(tl, model_path=None, data_folder='./'):
     ''' Generate a Mean IOU for a YeastNet Model
     
     This method accepts a model checkpoint and a timelapse
@@ -218,15 +219,28 @@ def getMeanAccuracy(tl, model_path = './'):
     a mean cell IOU.'''
     
     runningIOU = 0
-    checkpoint = torch.load(model_path)
-    testIDs = checkpoint['testID']
-    testIDs.sort()
+    if model_path:
+        checkpoint = torch.load(model_path)
+        testIDs = checkpoint['testID']
+        testIDs.sort()
+    else:
+        testIDs = list(range(tl.num_images))
 
-
+    mask_folder = data_folder + "/Masks/"
+    
+    mask_filenames = [f for f in os.listdir(mask_folder) if os.path.isfile(os.path.join(mask_folder, f)) and f[-3:] != 'ini']
+    filetype = mask_filenames[0][-4:]
+    #pdb.set_trace()
     for testID, pred_mask in zip(testIDs, tl.masks):
-        true_mask = sio.loadmat('Training Data 1D/Masks/mask' + str(testID) + '.mat')
-        true_mask = (true_mask['LAB_orig'] != 0)*1
-        true_mask = centreCrop(true_mask, 1024)
+
+        if filetype == '.mat':
+            true_mask = sio.loadmat(mask_folder + "mask" + str(testID) + filetype)
+            true_mask = (true_mask['LAB_orig'] != 0)*1
+            true_mask = centreCrop(true_mask, 1024)
+        else:
+            true_mask = imageio.imread(mask_folder + "mask" + str(testID) + filetype)
+            true_mask = (true_mask != 0)*1
+
         pred_mask = (pred_mask != 0)*1
         _, IntOfUnion = accuracy(true_mask, pred_mask)
 
