@@ -22,9 +22,9 @@ class Timelapse():
         self.toTensor = tv.transforms.ToTensor() 
         self.image_dir = image_dir
         self.image_filenames = [f for f in os.listdir(self.image_dir) if os.path.isfile(os.path.join(self.image_dir, f)) and f[-3:] != 'ini']
+        self.image_filenames.sort()
         self.num_images = len(self.image_filenames)
         self.total_cells = 0
-
         self.tensorsBW = [None] * self.num_images
         self.imagesBW = [None] * self.num_images
         self.masks = [None] * self.num_images
@@ -41,7 +41,7 @@ class Timelapse():
         path= self.image_dir[:-4]
         prefix='z2_t_000_000_'
         suffix='_'
-        x, gfpfl, cell_area = self.BuildCellTrack(idx, fp='GFP', path = path, prefix=prefix, suffix=suffix)
+        x, gfpfl, _ = self.BuildCellTrack(idx, fp='GFP', path = path, prefix=prefix, suffix=suffix)
         x, rfpfl, cell_area = self.BuildCellTrack(idx, fp='RFP', path = path, prefix=prefix, suffix=suffix)
         return x, gfpfl, rfpfl
 
