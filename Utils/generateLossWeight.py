@@ -1,17 +1,25 @@
 import numpy as np
 import scipy.io as sio
 from scipy import ndimage
+import imageio
+import pdb
 import matplotlib.pyplot as plt
 
 
-def load_mask(timepoint):
-    mask = sio.loadmat('Training Data/Masks/t_' + str(format(timepoint, '03d')) + '.mat')
-    x = mask['LAB'][8:-8, 184:-184]
-    return x
+def load_mask1(timepoint):
+    mask = sio.loadmat('./Training Data/Masks/mask%01d.mat' % timepoint)
+    cropped_mask = mask['LAB'][8:-8, 184:-184]
+    return cropped_mask
 
-def getLossMatrix(imageID):
+def load_mask2(timepoint, dataset):
+    image = imageio.imread('./Datasets/' + dataset + '/Loss Weight Maps/mask%03d.tif' % timepoint)
+    #image = image[8:-8, 184:-184]
+    return image
 
-    gt = load_mask(imageID)
+def getLossMatrix(imageID, dataset):
+
+    #gt = load_mask2(imageID, dataset)
+    gt = np.load('./Datasets/' + dataset + '/Masks/mask%03d.npy' % imageID)
     gt2 = ~(gt==0)
     uvals=np.unique(gt2)
     wmp=np.zeros(uvals.shape)
@@ -41,13 +49,23 @@ def getLossMatrix(imageID):
 
         bwgt=w0 * np.exp((-(np.power((d1+d2),2))) / (2*sigma) ) * (gt==0)
         weight = wc + bwgt
-    #show_image(bwgt)
-    #show_image(weight)
-    #show_image(wc)
+    #plt.imshow(bwgt)
+    #plt.show()
+    #plt.imshow(weight)
+    #plt.show()
+    #plt.imshow(wc)
+    #plt.show()
 
     return weight
 
-#for id in range(1,51):
-weight = getLossMatrix(51)
-print(weight)
-np.save('loss_weight_map' + str(51), weight)
+dataset = 'DSDataset'
+timepoints = 153
+for idx in range(timepoints):
+    weight = getLossMatrix(idx, dataset)
+    np.save(('./Datasets/DSDataset/New/lwm%03d' % idx), weight)
+    #image = np.load('./Datasets/' + dataset + '/Loss Weight Maps/lwm%01d.npy' % idx)
+    #imageio.imwrite(('./Datasets/' + dataset + '/New/lwm%03d.png' % idx), weight)
+
+#for idx in list(range(153)):
+    #imageio.imwrite(('./Datasets/YITDataset3/New/mask%03d.tif' % idx), load_image(idx))
+#    np.save(('./Datasets/DSDataset/New/mask%03d' % idx), load_image(idx))
