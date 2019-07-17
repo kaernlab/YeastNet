@@ -27,10 +27,6 @@ def validate(net, device, testLoader, criterion, saveImages = False):
         predictions = outputs.cpu().detach().numpy()[0,:,:,:]
         maskPrediction = (predictions[1] > predictions[0]) * 1
 
-        ## Calculate the Loss for the batch
-        #loss = criterion(outputs, mask.long(), lossWeightMap)
-        #print(loss.item())
-
         ## Calculate Accuracy and update running total
         PixAccuracy, IntOfUnion = accuracy(mask.cpu().detach().numpy()[0,:,:,0], maskPrediction)
         runningIOU += IntOfUnion[1]
