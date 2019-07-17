@@ -28,36 +28,39 @@ net = Net()
 optimizer = optim.SGD(net.parameters(), lr=0.1, momentum=0.9)
 
 
-
 ##Send Model to GPU
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 net.to(device)
 
 ## Load State
-
-checkpoint = torch.load("./CrossValidation/WarmStartModels/model_cp%01d.pt" % k)
-#checkpoint = torch.load("./testModel7.pt")
+highestAccuracy = 0 #
+#checkpoint = torch.load("./CrossValidation/WarmStartModels/model_cp%01d.pt" % k)
+checkpoint = torch.load("./CrossValidation/DoubleTrainedModels/model_cp%01d.pt" % k)
+#checkpoint = torch.load("./testModel%01d.pt" % k)
 testIDs = checkpoint['testID']
 trainIDs = checkpoint['trainID']
 iteration = checkpoint['iteration']
 start = checkpoint['epoch']
+#highestAccuracy = checkpoint['highestAccuracy']
 net.load_state_dict(checkpoint['network'])
 optimizer.load_state_dict(checkpoint['optimizer'])
 
 ##Change Optimizer params
 for g in optimizer.param_groups:
-    #g['lr'] = 0.1
+    g['lr'] = 0.01
     g['momentum'] = 0.9
 
+
+
 ## Instantiate Training and Validation DataLoaders
-trainDataSet = YeastSegmentationDataset(trainIDs, crop_size = 384, random_rotate = True, random_flip = True,
+trainDataSet = YeastSegmentationDataset(trainIDs, crop_size = 256, random_rotate = True, random_flip = True,
                                         no_og_data = False, random_crop=True)
-trainLoader = torch.utils.data.DataLoader(trainDataSet, batch_size=5,
-                                        shuffle=True, num_workers=0)
+trainLoader = torch.utils.data.DataLoader(trainDataSet, batch_size=10,
+                                        shuffle=True, num_workers=10)
 
 testDataSet = YeastSegmentationDataset(testIDs)
 testLoader = torch.utils.data.DataLoader(testDataSet, batch_size=1,
-                                        shuffle=False, num_workers=0)
+                                        shuffle=False, num_workers=10)
 
 #for i in range(len(testDataSet)):
 #    data = testDataSet[i]
@@ -106,17 +109,21 @@ for epoch in range(start,end):
 
     ## Epoch validation
     #print('\n\nValidating.... Please Hold')
-    if (epoch%10 == 0):
-        save_option = True
-    else:
-        save_option = False
 
-    val_acc = validateNetwork.validate(net, device, testLoader, criterion, saveImages=save_option)
+
+
+    val_acc = validateNetwork.validate(net, device, testLoader, criterion)
     print('[%d, %d] IntOfUnion (Cell): %.5f \n' % (iteration, epoch + 1, val_acc))
     writer.add_scalar('Validation Cell IOU', val_acc, global_step=epoch, walltime=time.time())
     ## Epoch Time
     elapsed_time = time.time() - start_time
     print(str(elapsed_time / 60) + 'min')
+
+    if val_acc > highestAccuracy:
+        save_option = True
+        highestAccuracy = val_acc
+    else:
+        save_option = False
 
     ## Save Model 
     if save_option: #saveCP:
@@ -126,9 +133,11 @@ for epoch in range(start,end):
             "trainID": trainIDs,
             "testID": testIDs,
             "epoch": epoch,
-            "iteration": iteration
+            "iteration": iteration,
+            "highestAccuracy": val_acc,
         }
-        torch.save(checkpoint,  "./testModel8.pt")
+        torch.save(checkpoint, "./CrossValidation/DoubleTrainedModels/model_cp%01d.pt" % k)
+
 ## Finish
 elapsed_time = time.time() - start_time
 print('Finished Training, Duration: seconds' + str(elapsed_time))
