@@ -58,13 +58,13 @@ def getLossMatrix(imageID, dataset):
 
     return weight
 
-dataset = 'DSDataset'
-timepoints = 153
+dataset = 'YITDataset3'
+timepoints = 20
 for idx in range(timepoints):
     weight = getLossMatrix(idx, dataset)
-    np.save(('./Datasets/DSDataset/New/lwm%03d' % idx), weight)
+    np.save(('./Datasets/' + dataset + '/LossWeightMaps/lwm%03d' % idx), weight)
     #image = np.load('./Datasets/' + dataset + '/Loss Weight Maps/lwm%01d.npy' % idx)
-    #imageio.imwrite(('./Datasets/' + dataset + '/New/lwm%03d.png' % idx), weight)
+    imageio.imwrite(('./Datasets/' + dataset + '/New/lwm%03d.png' % idx), weight)
 
 #for idx in list(range(153)):
     #imageio.imwrite(('./Datasets/YITDataset3/New/mask%03d.tif' % idx), load_image(idx))
