@@ -16,6 +16,9 @@ makePlots = args.make_plot
 makeCSV = args.make_csv
 compareIOU = args.compare_iou
 model_path = './ynetmodel/trainedModel.pt'
+model_path = './CrossValidation/DoubleTrainedModels/model_cp10.pt'
+datasetfolder = 'TestSets/YITDataset1'
+compareIOU = False
 
 ## For testing purposes
 #imagedir = '../tracking-analysis-py/Data/stable_60/FOV4/BF/'
