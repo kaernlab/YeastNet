@@ -18,7 +18,7 @@ def validate(net, device, testLoader, criterion, saveImages = False):
     ## Loop over batches
     for i, data in enumerate(testLoader, 1):
         ## Get inputs and transfer to GPU
-        validationImage, mask, lossWeightMap = data
+        validationImage, mask, _ = data
         validationImage = validationImage.to(device)
        
         ## Run Batch through data with no grad
@@ -28,7 +28,7 @@ def validate(net, device, testLoader, criterion, saveImages = False):
         maskPrediction = (predictions[1] > predictions[0]) * 1
 
         ## Calculate Accuracy and update running total
-        PixAccuracy, IntOfUnion = accuracy(mask.cpu().detach().numpy()[0,:,:,0], maskPrediction)
+        _, IntOfUnion = accuracy(mask.cpu().detach().numpy()[0,:,:,0], maskPrediction)
         runningIOU += IntOfUnion[1]
         
         ## Output Images
