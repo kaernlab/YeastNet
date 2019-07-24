@@ -45,6 +45,10 @@ start = checkpoint['epoch']
 net.load_state_dict(checkpoint['network'])
 optimizer.load_state_dict(checkpoint['optimizer'])
 
+## Parallelize net
+if torch.cuda.device_count() > 1:
+    net = torch.nn.DataParallel(net)
+
 ##Change Optimizer params
 for g in optimizer.param_groups:
     g['lr'] = 0.01
@@ -127,8 +131,13 @@ for epoch in range(start,end):
 
     ## Save Model 
     if save_option: #saveCP:
+        try:
+            net_state_dict = net.module.state_dict()
+        except AttributeError:
+            net_state_dict = net.state_dict()
+
         checkpoint = {
-            "network": net.state_dict(),
+            "network": net_state_dict,
             "optimizer": optimizer.state_dict(),
             "trainID": trainIDs,
             "testID": testIDs,
@@ -142,3 +151,5 @@ for epoch in range(start,end):
 elapsed_time = time.time() - start_time
 print('Finished Training, Duration: seconds' + str(elapsed_time))
 writer.close()
+
+# What works Best: make empty Net, load model, make DP model, save using module.state_dict() 
