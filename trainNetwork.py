@@ -19,9 +19,9 @@ from ynetmodel.WeightedCrossEntropyLoss import WeightedCrossEntropyLoss
 
 ## Start Timer, Tensorboard
 start_time = time.time()
-writer = tbX.SummaryWriter()#log_dir="./logs")
-k = 8
+k = 1
 end = 10000
+writer = tbX.SummaryWriter(comment='K_Fold' + str(k))#log_dir="./logs")
 
 ## Instantiate Net, Load Parameters, Move Net to GPU
 net = Net()
@@ -32,18 +32,35 @@ optimizer = optim.SGD(net.parameters(), lr=0.1, momentum=0.9)
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 net.to(device)
 
-## Load State
-highestAccuracy = 0 #
-#checkpoint = torch.load("./CrossValidation/WarmStartModels/model_cp%01d.pt" % k)
-checkpoint = torch.load("./CrossValidation/DoubleTrainedModels/model_cp%01d.pt" % k)
-#checkpoint = torch.load("./testModel%01d.pt" % k)
-testIDs = checkpoint['testID']
-trainIDs = checkpoint['trainID']
-iteration = checkpoint['iteration']
-start = checkpoint['epoch']
-#highestAccuracy = checkpoint['highestAccuracy']
-net.load_state_dict(checkpoint['network'])
-optimizer.load_state_dict(checkpoint['optimizer'])
+if 1==2:
+    ## Choose right samples based on k
+    trainIDs = torch.load('./Utils/sampleIDs.pt')
+    idx = (k-1)*15
+    testIDs = trainIDs[idx:idx+15]
+    del trainIDs[idx:idx+15]
+    testIDs = {
+        'DSDataset': testIDs
+    }
+    trainIDs = {
+        'DSDataset': trainIDs
+    }
+    iteration = 0
+    start = 0
+    highestAccuracy = 0
+
+if 1==1:
+    ## Load State
+    highestAccuracy = 0 #
+    #checkpoint = torch.load("./CrossValidation/WarmStartModels/model_cp%01d.pt" % k)
+    #checkpoint = torch.load("./CrossValidation/DoubleTrainedModels/model_cp%01d.pt" % k)
+    checkpoint = torch.load("./new_norm_test.pt")
+    testIDs = checkpoint['testID']
+    trainIDs = checkpoint['trainID']
+    iteration = checkpoint['iteration']
+    start = checkpoint['epoch']
+    highestAccuracy = checkpoint['highestAccuracy']
+    net.load_state_dict(checkpoint['network'])
+    optimizer.load_state_dict(checkpoint['optimizer'])
 
 ## Parallelize net
 if torch.cuda.device_count() > 1:
@@ -59,7 +76,7 @@ for g in optimizer.param_groups:
 ## Instantiate Training and Validation DataLoaders
 trainDataSet = YeastSegmentationDataset(trainIDs, crop_size = 256, random_rotate = True, random_flip = True,
                                         no_og_data = False, random_crop=True)
-trainLoader = torch.utils.data.DataLoader(trainDataSet, batch_size=10,
+trainLoader = torch.utils.data.DataLoader(trainDataSet, batch_size=8,
                                         shuffle=True, num_workers=10)
 
 testDataSet = YeastSegmentationDataset(testIDs)
@@ -145,7 +162,8 @@ for epoch in range(start,end):
             "iteration": iteration,
             "highestAccuracy": val_acc,
         }
-        torch.save(checkpoint, "./CrossValidation/DoubleTrainedModels/model_cp%01d.pt" % k)
+        #torch.save(checkpoint, "./CrossValidation/DoubleTrainedModels/model_cp%01d.pt" % k)
+        torch.save(checkpoint, './new_norm_test.pt')
 
 ## Finish
 elapsed_time = time.time() - start_time
