@@ -33,6 +33,7 @@ class Timelapse():
         self.identity = [None] * self.num_images
         self.contouredImages = [None] * self.num_images
         self.areas = [None] * self.num_images
+        self.setMoments = self.getDataSetMoments()
 
         self.centreCrop = centreCrop
         self.autoCrop = autoCrop
@@ -84,8 +85,8 @@ class Timelapse():
                 imageBW = self.autoCrop(imageBW)
 
             self.tensorsBW[idx] = tensorBW
-            self.imagesBW[idx] = (imageBW / imageBW.max() * 255).astype('uint8')
-            
+            #self.imagesBW[idx] = (imageBW / imageBW.max() * 255).astype('uint8')
+            self.imagesBW[idx] = imageBW#.astype('uint8')
 
     def makeMasks(self, masks):
         """ Generate masks from network segmentation predictions.
@@ -110,19 +111,37 @@ class Timelapse():
             mask = mask / mask.max() * 255
             self.masks[idx] = mask.astype('uint8')
 
+
+    ##This function will load all images and get the mean and standard deviation pixel intensity
+    def getDataSetMoments(self):
+        setMoments = {}
+        mean = np.array([])
+        std = np.array([])
+        for image_name in self.image_filenames:
+            path = self.image_dir + image_name
+            bw_image = imio.imread(path) 
+            mean = np.append(mean, bw_image.mean())
+            std = np.append(std, bw_image.std())
+
+        setMoments['mean'] = mean.mean()
+        setMoments['std'] = std.mean()
+
+        return setMoments
+
     def normalizeGrayscale(self, image):
         """ Normalizes grayscale images.
 
-        Normalizes image by zero-centering the data and changing the standard deviation
-        to 1. Then rescaling the data between 0-1 
+        Normalizes image by zero-centering the data and converting the pixel
+        values to z-scores. The mean and std used is collected for using every image in
+        the dataset.
 
         Input:
             image: image to be normalized
         Outputs:
             normalizedImage: normalized image
         """
-        image = (image - image.mean()) / image.std()
-        normalizedImage = (image - image.min()) / image.max()
+        normalizedImage = (image - self.setMoments['mean']) / self.setMoments['std']
+        #image = (image - image.min()) / image.max()
         return normalizedImage
 
     def cellTrack(self):
@@ -172,7 +191,7 @@ class Timelapse():
         for imageID in range(self.num_images):
             #bw_image = ((self.imagesBW[imageID]/ self.imagesBW[imageID].max())*255)
             #bw_image = Image.fromarray(bw_image.astype('uint8')).convert('RGB')
-            bw_image = Image.fromarray(self.contouredImages[imageID])#.convert('RGB')
+            bw_image = Image.fromarray(self.contouredImages[imageID].astype('uint8'))#.convert('RGB')
             draw = ImageDraw.Draw(bw_image)
 
             for idx, (label, centroid) in enumerate(zip(self.identity[imageID], self.centroids[imageID])):

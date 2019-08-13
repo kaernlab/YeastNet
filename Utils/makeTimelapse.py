@@ -30,7 +30,7 @@ def makeTimelapse(imagedir, model_path):
         imageio.imwrite(tl.image_dir + 'Results/' + str(idx) + 'Pred.png', mask)
 
     # Pass Mask into cell labeling script, return labelled cells 
-    for idx, (imageBW, mask) in enumerate(zip(tl.imagesBW, tl.masks)):
+    for idx, (imageBW, mask) in enumerate(zip(tl.imagesBW, tl.masks)): 
         tl.centroids[idx], tl.contouredImages[idx], tl.labels[idx], tl.areas[idx] = labelCells(np.array(mask), np.array(imageBW))
         imageio.imwrite(tl.image_dir + 'Results/' + str(idx) + 'Labels.png', tl.labels[idx])
         imageio.imwrite(tl.image_dir + 'Results/' + str(idx) + 'Overlay.png', tl.contouredImages[idx])

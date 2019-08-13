@@ -15,9 +15,10 @@ datasetfolder = args.datasetfolder
 makePlots = args.make_plot
 makeCSV = args.make_csv
 compareIOU = args.compare_iou
-model_path = './ynetmodel/trainedModel.pt'
-model_path = './CrossValidation/DoubleTrainedModels/model_cp10.pt'
-datasetfolder = 'TestSets/YITDataset1'
+model_path = './new_norm_testV2K1.pt'
+#model_path = './TrackingTest/trackingtest.pt'
+#model_path = './CrossValidation/DoubleTrainedModels/model_cp10.pt'
+datasetfolder = 'TestSets/YITDataset3'
 compareIOU = False
 
 ## For testing purposes
