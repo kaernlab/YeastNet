@@ -6,6 +6,7 @@ import torch
 import scipy.io as sio
 import numpy as np
 import imageio
+import matplotlib.pyplot as plt
 from Utils.helpers import centreCrop
 from Utils.helpers import accuracy
 
@@ -174,35 +175,38 @@ def compareOld2(model_path):
     return (runningIOU / len(testIDs))
 
 
-def cellStarIOU(modelnum = 10):
+def cellStarIOU(modelnum = 10, dataset = 'DSDataset'):
     """ Produce IOU measure for CellStar Output
     
     The Purpose of this function is to quantify the performance of
     the CellStar Platform when used on my GT-annotated dataset. The 
     script will generate an IOU measure"""
 
-    pred_path = 'C:/Users/Danny/Desktop/yeast-net/CrossValidation/CrossVal Accuracy/Model' + str(modelnum) + '/CellStar/segments/'
+    #pred_path = 'C:/Users/Danny/Desktop/yeast-net/CrossValidation/CrossVal Accuracy/Model' + str(modelnum) + '/CellStar/segments/'
+    pred_path = 'G:/CellStar/Images/Datasets/' + dataset + '/segments/'
     runningIOU = 0
 
-    cp = torch.load('C:/Users/Danny/Desktop/yeast-net/CrossValidation/Finetuned Models/model_cp' + str(modelnum) + '.pt')
-    testIDs = cp['testID']
+    cp = torch.load('./NewNormModels/new_norm_testV3K%01d.pt' % modelnum)
+    temp = cp['testID']
+    testIDs = temp.pop(dataset, None)
 
     for idx in testIDs:
-        if idx < 51:
-            pred_mask_name = 'z1_t_000_000_%03d_BF_segmentation.mat' % (idx+1)
-        elif idx > 101:
-            pred_mask_name = 'z3_t_000_000_%03d_BF_segmentation.mat' % (idx-101)
-        else:
-            pred_mask_name = 'z2_t_000_000_%03d_BF_segmentation.mat' % (idx-50)
+        pred_mask_name = 'im%03d_segmentation.mat' % (idx+1)
 
         pred_mask =  sio.loadmat(pred_path + pred_mask_name)
         pred_mask = (pred_mask['segments'] != 0)*1
 
-        true_mask = sio.loadmat('Training Data 1D/Masks/mask' + str(idx) + '.mat')
-        true_mask = (true_mask['LAB_orig'] != 0)*1
+        true_mask = np.load('./Datasets/' + dataset + '/Masks/mask%03d.npy' % idx)
+        true_mask = (true_mask != 0)*1
 
-        true_mask = centreCrop(true_mask, 1024)
         _, IntOfUnion = accuracy(true_mask, pred_mask)
+        
+        plt.figure()
+        plt.subplot(1, 2, 1)
+        plt.imshow(true_mask) 
+        plt.subplot(1, 2, 2)
+        plt.imshow(pred_mask)
+        plt.show()
 
         runningIOU += IntOfUnion[1]
 
