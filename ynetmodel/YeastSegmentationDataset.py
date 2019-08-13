@@ -57,25 +57,6 @@ class YeastSegmentationDataset(Dataset):
         bw_image = self.ToTensor(bw_image)
         return bw_image, mask, weight_loss_matrix
 
-    def getRAW(self,test_ID):
-
-        dataset_names = list(self.list_IDs) # should be ['DSDataset],[YITDataset1],[YITDataset3]
-        true_ID = test_ID
-        true_dataset = dataset_names[0]
-
-        for current_dataset, next_dataset in zip(dataset_names[:-1], dataset_names[1:]):
-            dataset_size = len(self.list_IDs[current_dataset])
-            if true_ID >= dataset_size:
-                true_ID -= dataset_size
-                true_dataset = next_dataset
-            else:
-                break
-        true_ID = self.list_IDs[true_dataset][true_ID]
-        data_ID = (true_ID, true_dataset)
-        bw_image = imageio.imread('./Datasets/' + data_ID[1] + '/Images/im%03d.tif' % data_ID[0])
-
-        return bw_image
-
     def getDataSetMoments(self):
         setMoments = {key:{} for key in self.list_IDs}
         for dataset_name in list(self.list_IDs):
@@ -83,7 +64,6 @@ class YeastSegmentationDataset(Dataset):
             std = numpy.array([])
             for imageID in self.list_IDs[dataset_name]:
                 bw_image = imageio.imread('./Datasets/' + dataset_name + '/Images/im%03d.tif' % imageID)
-                #bw_image = self.getRAW(imageID)
                 mean = numpy.append(mean, bw_image.mean())
                 std = numpy.append(std, bw_image.std())
 
@@ -104,7 +84,11 @@ class YeastSegmentationDataset(Dataset):
 
     def normalize(self,image, dataset_name):
         image = (image - self.setMoments[dataset_name]['mean']) / self.setMoments[dataset_name]['std']
-        #image = (image - image.min()) / image.max()
+        #image = (image - image.mean())
+        #image = (image / image.std())
+        #image = image + abs(image.min())
+        #image = image - abs(image.min())
+        #image = image / image.max()
         return image
 
     def loadImage(self, dataID):
