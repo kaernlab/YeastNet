@@ -7,13 +7,15 @@ import pdb
 ## Import Custom Code
 from Utils.helpers import accuracy
 
-def validate(net, device, testLoader, criterion, saveImages = False):
+def validate(net, device, testLoader, criterion = None, saveImages = False):
 
     ## Run net without regularization techniques
     net.eval()
 
     ## Loss Sum accumulator for output
     runningIOU = 0
+
+
 
     ## Loop over batches
     for i, data in enumerate(testLoader, 1):
@@ -33,10 +35,10 @@ def validate(net, device, testLoader, criterion, saveImages = False):
         
         ## Output Images
         if saveImages:
-            
-            imageio.imwrite('Validation/' + str(i) + 'Pred.png', maskPrediction.astype(float))
-            imageio.imwrite('Validation/' + str(i) + 'IMG.png', validationImage[0,0,:,:].cpu().detach().numpy())
-            imageio.imwrite('Validation/' + str(i) + 'True.png', mask[0,:,:,0].cpu().detach().numpy())
+            #pdb.set_trace()
+            imageio.imwrite('Validation/' + str(i) + 'Pred.png', (maskPrediction.astype('uint8'))* 255)#.astype(float) * 255))#.astype('uint8')
+            imageio.imwrite('Validation/' + str(i) + 'IMG.png', (validationImage[0,0,:,:].cpu().detach().numpy() * 255).astype('uint8'))
+            imageio.imwrite('Validation/' + str(i) + 'True.png', (mask[0,:,:,0].cpu().detach().numpy() * 255).astype('uint8'))
 
     ## Return the mean Loss
     return runningIOU / i
