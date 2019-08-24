@@ -14,7 +14,8 @@ import torchvision.transforms.functional as TF
 #Define Dataset Class
 class YeastSegmentationDataset(Dataset):
 
-    def __init__(self, list_IDs, transform=None, crop_size = 512, random_rotate = False, random_flip = False, random_crop = False, no_og_data = False):
+    def __init__(self, list_IDs, transform=None, crop_size = 512, random_rotate = False,
+                    random_flip = False, random_crop = False, no_og_data = False, normtype = 3):
         self.ToTensor = TV.ToTensor()
         self.crop_size = crop_size
         self.list_IDs = list_IDs
@@ -23,6 +24,7 @@ class YeastSegmentationDataset(Dataset):
         self.to_crop = random_crop
         self.no_og_data = no_og_data
         self.setMoments = self.getDataSetMoments()
+        self.normtype = normtype
 
     def __len__(self):
         return sum([len(x) for x in self.list_IDs.values()])
@@ -54,6 +56,8 @@ class YeastSegmentationDataset(Dataset):
         if self.to_crop:
             bw_image, mask, weight_loss_matrix = self.randomCrop(bw_image, mask, weight_loss_matrix, self.crop_size)
 
+        #self.showImage(bw_image[:,:,0], weight_loss_matrix[:,:,0])
+
         bw_image = self.ToTensor(bw_image)
         return bw_image, mask, weight_loss_matrix
 
@@ -83,12 +87,28 @@ class YeastSegmentationDataset(Dataset):
         return image
 
     def normalize(self,image, dataset_name):
-        image = (image - self.setMoments[dataset_name]['mean']) / self.setMoments[dataset_name]['std']
-        #image = (image - image.mean())
-        #image = (image / image.std())
-        #image = image + abs(image.min())
-        #image = image - abs(image.min())
-        #image = image / image.max()
+        #Per Database Norm 
+        if self.normtype==2 or self.normtype==3:
+            image = (image - self.setMoments[dataset_name]['mean']) / self.setMoments[dataset_name]['std']
+
+        #Per Image Norm 
+        if self.normtype==5:
+            image = (image - image.mean())
+            image = (image / image.std())
+
+        #Rescaling with negative values
+        if self.normtype==3:
+            image = image + abs(image.min())
+            image = image / image.max()
+
+        if self.normtype==4:
+            image = image - abs(image.min())
+            image = image / image.max()
+
+        #Old and incorrect method
+        if self.normtype==1:
+            image = (image - image.mean()) / image.std()
+            image = (image - image.min()) / image.max()
         return image
 
     def loadImage(self, dataID):
@@ -104,10 +124,13 @@ class YeastSegmentationDataset(Dataset):
         weightMap = numpy.load('./Datasets/' + dataID[1] + '/LossWeightMaps/lwm%03d.npy' % dataID[0]) 
         return weightMap[:,:,numpy.newaxis].astype(numpy.float32)
 
-    def showImage(self, image):
+    def showImage(self, image, loss):
         #Display image
         plt.figure()
-        plt.imshow(image)  
+        plt.subplot(1,2,1)
+        plt.imshow(image)
+        plt.subplot(1,2,2)
+        plt.imshow(loss)
         plt.show()
 
     def randomRotate(self, bw_image, mask, loss_map, no_og_data):
