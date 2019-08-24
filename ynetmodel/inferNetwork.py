@@ -4,12 +4,12 @@ import pdb
 from ynetmodel.defineNetwork import Net
 
 
-def inferNetwork(images, num_images, device = "cpu", model_path = "Current Model/model_cp.pt"):
+def inferNetwork(images, num_images, device = "cpu", model_path = "./model_cp.pt"):
     ## Instantiate Net, load parameters
     net = Net()
     net.eval()
     checkpoint = torch.load(model_path)
-    net.load_state_dict(checkpoint['network'])
+    net.load_state_dict(checkpoint['network'], map_location=device)
 
     ## Move Net to GPU
     net.to(device)
