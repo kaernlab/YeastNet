@@ -90,3 +90,17 @@ def autoCrop(image):
     return cropped_image
 
 
+def getDatasetMoments(list_IDs):
+    setMoments = {key:{} for key in list_IDs}
+    for dataset_name in list(list_IDs):
+        mean = np.array([])
+        std = np.array([])
+        for imageID in list_IDs[dataset_name]:
+            bw_image = imageio.imread('./Datasets/' + dataset_name + '/Images/im%03d.tif' % imageID)
+            mean = np.append(mean, bw_image.mean())
+            std = np.append(std, bw_image.std())
+
+        setMoments[dataset_name]['mean'] = mean.mean()
+        setMoments[dataset_name]['std'] = std.mean()
+
+    return setMoments
