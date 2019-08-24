@@ -15,7 +15,7 @@ import torchvision.transforms.functional as TF
 class YeastSegmentationDataset(Dataset):
 
     def __init__(self, list_IDs, transform=None, crop_size = 512, random_rotate = False,
-                    random_flip = False, random_crop = False, no_og_data = False, normtype = 3):
+                    random_flip = False, random_crop = False, no_og_data = False, normtype = 3, setMoments = False):
         self.ToTensor = TV.ToTensor()
         self.crop_size = crop_size
         self.list_IDs = list_IDs
@@ -23,8 +23,12 @@ class YeastSegmentationDataset(Dataset):
         self.to_flip = random_flip
         self.to_crop = random_crop
         self.no_og_data = no_og_data
-        self.setMoments = self.getDataSetMoments()
         self.normtype = normtype
+
+        if setMoments == False:
+            self.setMoments = self.getDataSetMoments()
+        else:
+            self.setMoments = setMoments
 
     def __len__(self):
         return sum([len(x) for x in self.list_IDs.values()])
