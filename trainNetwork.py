@@ -12,6 +12,7 @@ from torch import optim
 
 ## Import Custom Modules
 import ynetmodel.validateNetwork as validateNetwork
+from Utils.helpers import getDatasetMoments
 
 ## Import Custom Classes
 from ynetmodel.YeastSegmentationDataset import YeastSegmentationDataset
@@ -24,11 +25,15 @@ def main():
     try:
         k = int(os.environ['K_FOLD'])
         toResume = os.environ['RESUME']
+        normtype = os.environ['NORMTYPE']
+        allDatasets = os.environ['ALLDATASETS']
     except KeyError:
-        k = 1
-        toResume = 'True'
+        k = 5
+        toResume = 'False'
+        normtype = 3
+        allDatasets = 'True'
 
-    print('Training K-fold ' + str(k))
+    print('Training K-fold ' + str(k) + ': Normalization type ' + str(normtype))
 
 
     ## Start Timer, Tensorboard
@@ -38,7 +43,7 @@ def main():
 
     ## Instantiate Net, Load Parameters, Move Net to GPU
     net = Net()
-    optimizer = optim.SGD(net.parameters(), lr=0.01)#, momentum=0.9)
+    optimizer = optim.SGD(net.parameters(), lr=0.1, momentum=0.9)
 
 
     ##Send Model to GPU
@@ -49,9 +54,17 @@ def main():
     if toResume=='True':
         ## Load State
         highestAccuracy = 0 #
+
+        if allDatasets == 'False':
+            inputpath ="./NewNormModels/new_norm_testDSV%01dK%01d.pt" % (normtype,k) 
+        else:
+            inputpath ="./NewNormModels/new_norm_testV%01dK%01d.pt" % (normtype,k) 
+        
+
         #checkpoint = torch.load("./CrossValidation/WarmStartModels/model_cp%01d.pt" % k)
         #checkpoint = torch.load("./CrossValidation/DoubleTrainedModels/model_cp%01d.pt" % k)
-        checkpoint = torch.load("./new_norm_testDSV3K%01d.pt" % k)
+       
+        checkpoint = torch.load(inputpath)
         testIDs = checkpoint['testID']
         trainIDs = checkpoint['trainID']
         iteration = checkpoint['iteration']
@@ -78,12 +91,15 @@ def main():
         highestAccuracy = 0
         checkpoint = torch.load("./CrossValidation/DoubleTrainedModels/model_cp%01d.pt" % k)
         testIDs = checkpoint['testID']
-        testIDs.pop('YITDataset1', None)
-        testIDs.pop('YITDataset3', None)
         trainIDs = checkpoint['trainID']
-        trainIDs.pop('YITDataset1', None)
-        trainIDs.pop('YITDataset3', None)
 
+        if allDatasets == 'False':
+            testIDs.pop('YITDataset1', None)
+            testIDs.pop('YITDataset3', None)
+            trainIDs.pop('YITDataset1', None)
+            trainIDs.pop('YITDataset3', None)
+
+        setMoments = getDatasetMoments(trainIDs)
 
     ## Parallelize net
     if torch.cuda.device_count() > 1:
@@ -98,12 +114,12 @@ def main():
 
 
     ## Instantiate Training and Validation DataLoaders
-    trainDataSet = YeastSegmentationDataset(trainIDs, crop_size = 256, random_rotate = True, random_flip = True,
-                                            no_og_data = False, random_crop=False)
+    trainDataSet = YeastSegmentationDataset(trainIDs, crop_size = 256, random_rotate = True, random_flip = False,
+                                            no_og_data = False, random_crop=False, normtype=normtype, setMoments = setMoments)
     trainLoader = torch.utils.data.DataLoader(trainDataSet, batch_size=1,
                                             shuffle=True, num_workers=1)
 
-    testDataSet = YeastSegmentationDataset(testIDs)
+    testDataSet = YeastSegmentationDataset(testIDs, normtype=normtype, setMoments = setMoments)
     testLoader = torch.utils.data.DataLoader(testDataSet, batch_size=1,
                                             shuffle=False, num_workers=1)
 
@@ -190,7 +206,11 @@ def main():
                 "highestAccuracy": val_acc,
             }
             #torch.save(checkpoint, "./CrossValidation/DoubleTrainedModels/model_cp%01d.pt" % k)
-            torch.save(checkpoint, "./NewNormModels/new_norm_testDSV3K%01d.pt" % k)
+            if allDatasets == 'False':
+                outputpath ="./NewNormModels/new_norm_testDSV%01dK%01d.pt" % (normtype,k) 
+            else:
+                outputpath ="./NewNormModels/new_norm_testV%01dK%01d.pt" % (normtype,k) 
+            torch.save(checkpoint, outputpath)
 
     ## Finish
     elapsed_time = time.time() - start_time
