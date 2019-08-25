@@ -140,7 +140,9 @@ class Timelapse():
         Outputs:
             normalizedImage: normalized image
         """
-        normalizedImage = (image - self.setMoments['mean']) / self.setMoments['std']
+        image = (image - self.setMoments['mean']) / self.setMoments['std']
+        image = image + abs(image.min())
+        normalizedImage = image / image.max()
         #image = (image - image.min()) / image.max()
         return normalizedImage
 
