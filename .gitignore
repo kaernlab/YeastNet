@@ -13,4 +13,15 @@
 /ynetmodel/trainedModel.pt
 /Datasets
 /images
+<<<<<<< HEAD
 /TestSets
+=======
+/TestSets
+/NewNormModels
+temp.py
+test.py
+/testOutput
+trainNetwork2.py
+/Old
+
+>>>>>>> norm-test

@@ -28,3 +28,12 @@ Options for the trackingPipeline are available using the command:
 ```python trackingPipeline --help```
 
 This library will use CUDA-based GPU computation for neural net inference by default. If no supported GPU is available, inference will complete using the CPU.  
+
+
+## Files do Download
+
+You can download the Images with Ground Truth Masks at:
+<https://drive.google.com/open?id=1C4YDt8S-rsJF68zFUJU92Oxm7C9M8jxQ>
+
+You can download the model parameters at:
+<https://drive.google.com/open?id=13N3X9jRqKdQEm15MzTB6z_GxZtOjLGe7>

@@ -10,7 +10,7 @@ from ynetmodel.inferNetwork import inferNetwork
 from Utils.labelCells import labelCells
 from Utils.Timelapse import Timelapse
 
-def makeTimelapse(imagedir, model_path):
+def makeTimelapse(imagedir, model_path, saveExp):
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
     tl = Timelapse(device = device, image_dir = imagedir)
 
@@ -26,11 +26,12 @@ def makeTimelapse(imagedir, model_path):
         os.mkdir(tl.image_dir + 'Results')
         os.mkdir(tl.image_dir + 'Results/Tracking')
 
+    #Save images of predicted masks
     for idx, mask in enumerate(tl.masks):
         imageio.imwrite(tl.image_dir + 'Results/' + str(idx) + 'Pred.png', mask)
 
-    # Pass Mask into cell labeling script, return labelled cells 
-    for idx, (imageBW, mask) in enumerate(zip(tl.imagesBW, tl.masks)):
+    # Pass Mask into cell labeling script, return labelled cells. Save Images
+    for idx, (imageBW, mask) in enumerate(zip(tl.imagesBW, tl.masks)): 
         tl.centroids[idx], tl.contouredImages[idx], tl.labels[idx], tl.areas[idx] = labelCells(np.array(mask), np.array(imageBW))
         imageio.imwrite(tl.image_dir + 'Results/' + str(idx) + 'Labels.png', tl.labels[idx])
         imageio.imwrite(tl.image_dir + 'Results/' + str(idx) + 'Overlay.png', tl.contouredImages[idx])
@@ -41,9 +42,10 @@ def makeTimelapse(imagedir, model_path):
         tl.cellTrack()
         tl.DrawTrackedCells()
 
-    # Save timelapse experiment in the Results folder
-    with open(tl.image_dir + 'Results/timelapse.pkl', 'wb') as f:
-        pickle.dump(tl, f, pickle.HIGHEST_PROTOCOL)
+    if saveExp:
+        # Save timelapse experiment in the Results folder
+        with open(tl.image_dir + 'Results/timelapse.pkl', 'wb') as f:
+            pickle.dump(tl, f, pickle.HIGHEST_PROTOCOL)
 
     return tl
 
