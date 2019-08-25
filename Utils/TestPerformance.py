@@ -186,7 +186,8 @@ def cellStarIOU(modelnum = 10, dataset = 'DSDataset'):
     pred_path = 'G:/CellStar/Images/Datasets/' + dataset + '/segments/'
     runningIOU = 0
 
-    cp = torch.load('./NewNormModels/new_norm_testV3K%01d.pt' % modelnum)
+    #cp = torch.load('./NewNormModels/new_norm_testV3K%01d.pt' % modelnum)
+    cp = torch.load('./CrossValidation/DoubleTrainedModels/model_cp%01d.pt' % modelnum)
     temp = cp['testID']
     testIDs = temp.pop(dataset, None)
 
@@ -200,14 +201,14 @@ def cellStarIOU(modelnum = 10, dataset = 'DSDataset'):
         true_mask = (true_mask != 0)*1
 
         _, IntOfUnion = accuracy(true_mask, pred_mask)
-        
+        '''
         plt.figure()
         plt.subplot(1, 2, 1)
         plt.imshow(true_mask) 
         plt.subplot(1, 2, 2)
         plt.imshow(pred_mask)
         plt.show()
-
+'''
         runningIOU += IntOfUnion[1]
 
 
@@ -219,9 +220,9 @@ def yeastSpotterIOU(data_folder="./"):
     The Purpose of this function is to quantify the performance of
     the YeastSpotter Platform. The script will generate an IOU measure"""
 
-    data_folder = './Datasets/YITDataset1/'
-    mask_folder = data_folder + 'Masks/'
-    results_folder = data_folder + 'YSresults/'
+    data_folder = '../yeast-net-backup/Datasets Backup/YITDataset1/'
+    mask_folder = data_folder + 'MasksOLD/'
+    results_folder = data_folder + 'RCresults/'
     filetype = '.tif'
     runningIOU = 0
     testIDs = list(range(60))
@@ -229,11 +230,14 @@ def yeastSpotterIOU(data_folder="./"):
     for testID in testIDs:
 
         
-        pred_mask = imageio.imread(results_folder + ('im%03d' % testID) + filetype)
-        pred_mask = (pred_mask != 0)*1
+        #pred_mask = imageio.imread(results_folder + ('im%03d' % testID) + filetype)
+        #pred_mask = (pred_mask != 0)*1
+
+        pred_mask = sio.loadmat(results_folder + 't_%03d_z1_BW' % testID)
+        pred_mask = (pred_mask['BW'] != 0)*1
  
 
-        true_mask = imageio.imread(mask_folder + "mask" + str(testID) + filetype)
+        true_mask = imageio.imread(mask_folder + "mask%03d" % testID + filetype)
         true_mask = (true_mask != 0)*1
 
         _, IntOfUnion = accuracy(true_mask, pred_mask)
