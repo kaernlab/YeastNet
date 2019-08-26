@@ -38,9 +38,9 @@ This library will use CUDA-based GPU computation for neural net inference by def
 ## Files do Download
 
 You can download the Images with Ground Truth Masks at:
-<https://drive.google.com/open?id=15oFyaInwzY98pOcf7eNO-ZWkJwXQ4Fs->
+<https://drive.google.com/open?id=17fEUZdODqfi0GwK9OQi3W3oKPX3vJHua>
 
 You can download a set of YeastNet2 parameters at:
-<https://drive.google.com/open?id=1aB_IKuV3hKe3h39_Ua_z9bnl8pGP6tPe>
+<https://drive.google.com/open?id=10nGfO99JcNNtZXyWDtaQN_HmYaPQ6ga9>
 
 Export and place the YeastNet2 Model and the Images folder into the main directory.
