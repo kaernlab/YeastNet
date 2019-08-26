@@ -8,8 +8,8 @@ def inferNetwork(images, num_images, device = "cpu", model_path = "./model_cp.pt
     ## Instantiate Net, load parameters
     net = Net()
     net.eval()
-    checkpoint = torch.load(model_path)
-    net.load_state_dict(checkpoint['network'], map_location=device)
+    checkpoint = torch.load(model_path, map_location=device)
+    net.load_state_dict(checkpoint['network'])
 
     ## Move Net to GPU
     net.to(device)

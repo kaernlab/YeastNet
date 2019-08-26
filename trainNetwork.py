@@ -29,7 +29,7 @@ def main():
         allDatasets = os.environ['ALLDATASETS']
     except KeyError:
         k = 5
-        toResume = 'False'
+        toResume = 'True'
         normtype = 3
         allDatasets = 'True'
 
@@ -43,7 +43,7 @@ def main():
 
     ## Instantiate Net, Load Parameters, Move Net to GPU
     net = Net()
-    optimizer = optim.SGD(net.parameters(), lr=0.1, momentum=0.9)
+    optimizer = optim.SGD(net.parameters(), lr=0.05, momentum=0.9)
 
 
     ##Send Model to GPU
@@ -53,18 +53,12 @@ def main():
 
     if toResume=='True':
         ## Load State
-        highestAccuracy = 0 #
-
         if allDatasets == 'False':
             inputpath ="./NewNormModels/new_norm_testDSV%01dK%01d.pt" % (normtype,k) 
         else:
             inputpath ="./NewNormModels/new_norm_testV%01dK%01d.pt" % (normtype,k) 
-        
-
-        #checkpoint = torch.load("./CrossValidation/WarmStartModels/model_cp%01d.pt" % k)
-        #checkpoint = torch.load("./CrossValidation/DoubleTrainedModels/model_cp%01d.pt" % k)
        
-        checkpoint = torch.load(inputpath)
+        checkpoint = torch.load(inputpath, map_location=device)
         testIDs = checkpoint['testID']
         trainIDs = checkpoint['trainID']
         iteration = checkpoint['iteration']
@@ -72,7 +66,7 @@ def main():
         highestAccuracy = checkpoint['highestAccuracy']
         net.load_state_dict(checkpoint['network'])
         optimizer.load_state_dict(checkpoint['optimizer'])
-
+        setMoments = getDatasetMoments(trainIDs)
     else:
 
         ## Choose right samples based on k
@@ -106,8 +100,8 @@ def main():
         net = torch.nn.DataParallel(net)
 
     ##Change Optimizer params
-    #for g in optimizer.param_groups:
-        #g['lr'] = 0.01
+    for g in optimizer.param_groups:
+        g['lr'] = 0.05
         #g['momentum'] = 0.9
 
     scheduler = optim.lr_scheduler.ReduceLROnPlateau(optimizer, 'min', factor=0.8, patience=25, verbose=True)
@@ -123,10 +117,6 @@ def main():
     testLoader = torch.utils.data.DataLoader(testDataSet, batch_size=1,
                                             shuffle=False, num_workers=1)
 
-    #for i in range(len(testDataSet)):
-    #    data = testDataSet[i]
-    #    trainingImage, mask, lossWeightMap = data
-    #pdb.set_trace()
 
     ## Set Training hyperparameters/conditions
     criterion = WeightedCrossEntropyLoss()
@@ -149,7 +139,7 @@ def main():
 
             ## Forward Pass
             outputs = net(trainingImage.float())
-            #print('Forward Pass')
+
             ## Write Graph
             #writer.add_graph(net, trainingImage.float())
 
@@ -157,21 +147,15 @@ def main():
             if torch.isnan(outputs).any() > 0:
                 print('There Be Nans')
             loss = criterion(outputs, mask.long(), lossWeightMap)
-            #print('Loss Calculated:', loss.item())
-            #writer.add_scalar('Batch Loss', loss.item(), global_step=iteration, walltime=time.time())
             
             ## Backpropagate Loss
             loss.backward()
-            #print('Backpropagation Done')
 
             ## Update Parameters
             
             optimizer.step()
 
         ## Epoch validation
-        #print('\n\nValidating.... Please Hold')
-
-
 
         val_acc = validateNetwork.validate(net, device, testLoader, criterion, saveImages = True)
         scheduler.step(val_acc)
@@ -205,7 +189,6 @@ def main():
                 "iteration": iteration,
                 "highestAccuracy": val_acc,
             }
-            #torch.save(checkpoint, "./CrossValidation/DoubleTrainedModels/model_cp%01d.pt" % k)
             if allDatasets == 'False':
                 outputpath ="./NewNormModels/new_norm_testDSV%01dK%01d.pt" % (normtype,k) 
             else:
