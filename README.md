@@ -19,7 +19,9 @@ PC: ```conda env create -f environmentPC.yml```
 
 ```conda activate yeast-net```
 
-3) Navigate to the folder containing the BrightField Images and run the Tracking Pipeline
+3) Download the model parameters and Images
+
+4) Navigate to the folder containing the BrightField Images and run the Tracking Pipeline
 
 ```python .\trackingPipeline.py -f 'Z2' -p True```
 
@@ -35,7 +37,7 @@ GFP Images should by default should be in the path "./Images/GFP/."
 This library will use CUDA-based GPU computation for neural net inference by default. If no supported GPU is available, inference will complete using the CPU.  
 
 
-## Files do Download
+## Files to Download
 
 You can download the Images with Ground Truth Masks at:
 <https://drive.google.com/open?id=17fEUZdODqfi0GwK9OQi3W3oKPX3vJHua>
