@@ -193,7 +193,7 @@ class Timelapse():
         for imageID in range(self.num_images):
             #bw_image = ((self.imagesBW[imageID]/ self.imagesBW[imageID].max())*255)
             #bw_image = Image.fromarray(bw_image.astype('uint8')).convert('RGB')
-            bw_image = Image.fromarray(self.contouredImages[imageID].astype('uint8'))#.convert('RGB')
+            bw_image = Image.fromarray((self.contouredImages[imageID]*255).astype('uint8'))#.convert('RGB')
             draw = ImageDraw.Draw(bw_image)
 
             for idx, (label, centroid) in enumerate(zip(self.identity[imageID], self.centroids[imageID])):
@@ -210,8 +210,8 @@ class Timelapse():
         cell_area = []
         
         for timepoint in range(self.num_images):
-            image_path = path  + '/' +  fp + '/' + prefix + '%03d'  % (idx+1) + suffix + '.tif'
-            imageFP = imio.imread(image_path) 
+            image_path = path  + '/' +  fp + '/' + prefix + '%03d'  % (timepoint+1) + suffix + fp +'.tif'
+            imageFP = imio.imread(image_path)
             imageFP = self.centreCrop(imageFP, 1024)
             #imageFP = (imageFP / imageFP.max() * 255).astype('uint8')
             
@@ -220,7 +220,7 @@ class Timelapse():
             if trackedLabel.size==1:
                 trackedLabel = trackedLabel[0]
                 area = self.areas[timepoint][trackedLabel]
-                fl = imageFP[self.labels[timepoint]==trackedLabel].sum() / area
+                fl = imageFP[self.labels[timepoint]==(trackedLabel+1)].sum() / area
                 outputfl.append(fl)
                 cell_area.append(area)
                 x.append(timepoint)

@@ -34,8 +34,8 @@ def makeTimelapse(imagedir, model_path, saveExp):
     for idx, (imageBW, mask) in enumerate(zip(tl.imagesBW, tl.masks)): 
         tl.centroids[idx], tl.contouredImages[idx], tl.labels[idx], tl.areas[idx] = labelCells(np.array(mask), np.array(imageBW))
         imageio.imwrite(tl.image_dir + 'Results/' + str(idx) + 'Labels.png', tl.labels[idx])
-        imageio.imwrite(tl.image_dir + 'Results/' + str(idx) + 'Overlay.png', tl.contouredImages[idx])
-        imageio.imwrite(tl.image_dir + 'Results/' + str(idx) + 'BWimage.png', imageBW)
+        imageio.imwrite(tl.image_dir + 'Results/' + str(idx) + 'Overlay.png', (tl.contouredImages[idx] * 255).astype('uint8'))
+        imageio.imwrite(tl.image_dir + 'Results/' + str(idx) + 'BWimage.png', (imageBW * 255).astype('uint8'))
 
     # Only conduct tracking if there is more than one image
     if tl.num_images > 1:
