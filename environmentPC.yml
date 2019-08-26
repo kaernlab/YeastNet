@@ -1,4 +1,4 @@
-name: yeast-net-test
+name: yeast-net
 channels:
   - pytorch
   - conda-forge
