@@ -29,7 +29,7 @@ def main():
         allDatasets = os.environ['ALLDATASETS']
     except KeyError:
         k = 5
-        toResume = 'True'
+        toResume = 'False'
         normtype = 3
         allDatasets = 'True'
 
@@ -99,18 +99,17 @@ def main():
     trainDataSet = YeastSegmentationDataset(trainIDs, crop_size = 256, random_rotate = True, random_flip = False,
                                             no_og_data = False, random_crop=False, normtype=normtype, setMoments = setMoments)
     trainLoader = torch.utils.data.DataLoader(trainDataSet, batch_size=1,
-                                            shuffle=True, num_workers=1)
+                                            shuffle=True, num_workers=0)
 
     testDataSet = YeastSegmentationDataset(testIDs, normtype=normtype, setMoments = setMoments)
     testLoader = torch.utils.data.DataLoader(testDataSet, batch_size=1,
-                                            shuffle=False, num_workers=1)
+                                            shuffle=False, num_workers=0)
 
 
     ## Set Training hyperparameters/conditions
     criterion = WeightedCrossEntropyLoss()
     classes = ('background','cell')
-
-    ## Epoch Loop: first loops over batches, then over v alidation set
+    ## Epoch Loop: first loops over batches, then over validation set
     for epoch in range(start,end):  
         
         net.train()
@@ -178,10 +177,11 @@ def main():
                 "iteration": iteration,
                 "highestAccuracy": val_acc,
             }
-            if allDatasets == 'False':
-                outputpath ="./NewNormModels/new_norm_testDSV%01dK%01d.pt" % (normtype,k) 
-            else:
-                outputpath ="./NewNormModels/new_norm_testV%01dK%01d.pt" % (normtype,k) 
+            #if allDatasets == 'False':
+            #    outputpath ="./NewNormModels/new_norm_testDSV%01dK%01d.pt" % (normtype,k) 
+            #else:
+            #    outputpath ="./NewNormModels/new_norm_testV%01dK%01d.pt" % (normtype,k) 
+            outputpath = 'test.pt'
             torch.save(checkpoint, outputpath)
 
     ## Finish
