@@ -1,6 +1,5 @@
 ## Import Librarys and Modules
 import torch
-import tensorboardX as tbX
 import pdb
 import random
 import time
@@ -9,6 +8,7 @@ import os
 
 from torch.utils.data import DataLoader
 from torch import optim
+from torch.utils.tensorboard import SummaryWriter
 
 ## Import Custom Modules
 import ynetmodel.validateNetwork as validateNetwork
@@ -39,7 +39,7 @@ def main():
     ## Start Timer, Tensorboard
     start_time = time.time()
     end = 10000
-    writer = tbX.SummaryWriter(comment='K_Fold' + str(k))#log_dir="./logs")
+    writer = SummaryWriter(comment='K_Fold' + str(k))#log_dir="./logs")
 
     ## Instantiate Net, Load Parameters, Move Net to GPU
     net = Net()
@@ -68,24 +68,12 @@ def main():
         optimizer.load_state_dict(checkpoint['optimizer'])
         setMoments = getDatasetMoments(trainIDs)
     else:
-
-        ## Choose right samples based on k
-    #  trainIDs = torch.load('./YeastNet/Utils/sampleIDs.pt')
-    #  idx = (k-1)*15
-    #  testIDs = trainIDs[idx:idx+15]
-    #   del trainIDs[idx:idx+15]
-    #   testIDs = {
-    #        'DSDataset': testIDs
-    #    }
-    #    trainIDs = {
-    #        'DSDataset': trainIDs
-    #    }
+        ## Intialize State
         iteration = 0
         start = 0
         highestAccuracy = 0
-        checkpoint = torch.load("./CrossValidation/DoubleTrainedModels/model_cp%01d.pt" % k)
-        testIDs = checkpoint['testID']
-        trainIDs = checkpoint['trainID']
+        testIDs = torch.load("./CrossValidation/testIDs.pt")[k-1]
+        trainIDs = torch.load("./CrossValidation/trainIDs.pt")[k-1]
 
         if allDatasets == 'False':
             testIDs.pop('YITDataset1', None)
@@ -125,6 +113,7 @@ def main():
     ## Epoch Loop: first loops over batches, then over v alidation set
     for epoch in range(start,end):  
         
+        net.train()
         ## Batch Loop
         for i, data in enumerate(trainLoader, 0):
             ## Total iteration

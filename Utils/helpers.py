@@ -85,7 +85,6 @@ def autoCrop(image):
             new_width = test_width
             break
 
-    
     cropped_image = centreCrop(image, (new_height, new_width))
     return cropped_image
 
