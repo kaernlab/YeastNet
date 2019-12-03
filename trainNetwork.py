@@ -43,7 +43,7 @@ def main():
 
     ## Instantiate Net, Load Parameters, Move Net to GPU
     net = Net()
-    optimizer = optim.SGD(net.parameters(), lr=0.05, momentum=0.9)
+    optimizer = optim.SGD(net.parameters(), lr=0.01, momentum=0.9)
 
 
     ##Send Model to GPU
@@ -88,8 +88,8 @@ def main():
         net = torch.nn.DataParallel(net)
 
     ##Change Optimizer params
-    for g in optimizer.param_groups:
-        g['lr'] = 0.05
+    #for g in optimizer.param_groups:
+    #    g['lr'] = 0.05
         #g['momentum'] = 0.9
 
     scheduler = optim.lr_scheduler.ReduceLROnPlateau(optimizer, 'min', factor=0.8, patience=25, verbose=True)
@@ -97,8 +97,8 @@ def main():
 
     ## Instantiate Training and Validation DataLoaders
     trainDataSet = YeastSegmentationDataset(trainIDs, crop_size = 256, random_rotate = True, random_flip = False,
-                                            no_og_data = False, random_crop=False, normtype=normtype, setMoments = setMoments)
-    trainLoader = torch.utils.data.DataLoader(trainDataSet, batch_size=1,
+                                            no_og_data = False, random_crop = True, normtype=normtype, setMoments = setMoments)
+    trainLoader = torch.utils.data.DataLoader(trainDataSet, batch_size=8,
                                             shuffle=True, num_workers=0)
 
     testDataSet = YeastSegmentationDataset(testIDs, normtype=normtype, setMoments = setMoments)
