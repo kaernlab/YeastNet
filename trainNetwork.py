@@ -32,6 +32,7 @@ def main():
         toResume = 'False'
         normtype = 3
         allDatasets = 'True'
+        trainTwo = 'True'
 
     print('Training K-fold ' + str(k) + ': Normalization type ' + str(normtype))
 
@@ -83,6 +84,21 @@ def main():
 
         setMoments = getDatasetMoments(trainIDs)
 
+        ## New two Dataset Training
+        if trainTwo == 'True':
+            trainIDs = {
+                'DSDataset': list(range(150)),
+                #'YITDataset1': list(range(60)),
+                'YITDataset3': list(range(20)),
+            }
+            testIDs = {
+                #'DSDataset': list(range(150)),
+                'YITDataset1': list(range(60)),
+                #'YITDataset3': list(range(20)),
+            }
+        trainSetMoments = getDatasetMoments(trainIDs)
+        testSetMoments = getDatasetMoments(testIDs)
+
     ## Parallelize net
     if torch.cuda.device_count() > 1:
         net = torch.nn.DataParallel(net)
@@ -97,11 +113,11 @@ def main():
 
     ## Instantiate Training and Validation DataLoaders
     trainDataSet = YeastSegmentationDataset(trainIDs, crop_size = 256, random_rotate = True, random_flip = False,
-                                            no_og_data = False, random_crop = True, normtype=normtype, setMoments = setMoments)
+                                            no_og_data = False, random_crop = True, normtype=normtype, setMoments = trainSetMoments)
     trainLoader = torch.utils.data.DataLoader(trainDataSet, batch_size=8,
                                             shuffle=True, num_workers=0)
 
-    testDataSet = YeastSegmentationDataset(testIDs, normtype=normtype, setMoments = setMoments)
+    testDataSet = YeastSegmentationDataset(testIDs, normtype=normtype, setMoments = testSetMoments)
     testLoader = torch.utils.data.DataLoader(testDataSet, batch_size=1,
                                             shuffle=False, num_workers=0)
 
@@ -181,7 +197,7 @@ def main():
             #    outputpath ="./NewNormModels/new_norm_testDSV%01dK%01d.pt" % (normtype,k) 
             #else:
             #    outputpath ="./NewNormModels/new_norm_testV%01dK%01d.pt" % (normtype,k) 
-            outputpath = 'test.pt'
+            outputpath = 'test13t2.pt'
             torch.save(checkpoint, outputpath)
 
     ## Finish
