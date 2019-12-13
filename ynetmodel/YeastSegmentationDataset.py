@@ -15,7 +15,8 @@ import torchvision.transforms.functional as TF
 class YeastSegmentationDataset(Dataset):
 
     def __init__(self, list_IDs, transform=None, crop_size = 512, random_rotate = False,
-                    random_flip = False, random_crop = False, no_og_data = False, normtype = 3, setMoments = False):
+                    random_flip = False, random_crop = False, no_og_data = False,
+                    normtype = 3, setMoments = False, loss_param = ['10','5']):
         self.ToTensor = TV.ToTensor()
         self.crop_size = crop_size
         self.list_IDs = list_IDs
@@ -24,6 +25,7 @@ class YeastSegmentationDataset(Dataset):
         self.to_crop = random_crop
         self.no_og_data = no_og_data
         self.normtype = normtype
+        self.loss_param = loss_param
 
         if setMoments == False:
             self.setMoments = self.getDataSetMoments()
@@ -125,7 +127,7 @@ class YeastSegmentationDataset(Dataset):
         return mask[:,:,numpy.newaxis]
         
     def loadLossMap(self, dataID):
-        weightMap = numpy.load('./Datasets/' + dataID[1] + '/LossWeightMaps/lwm%03d.npy' % dataID[0]) 
+        weightMap = numpy.load('./Datasets/' + dataID[1] + '/LossWeightMaps/' + '.'.join(self.loss_param) + '/lwm%03d.npy' % dataID[0]) 
         return weightMap[:,:,numpy.newaxis].astype(numpy.float32)
 
     def showImage(self, image, loss):

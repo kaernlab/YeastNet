@@ -27,11 +27,13 @@ def main():
         toResume = os.environ['RESUME']
         normtype = os.environ['NORMTYPE']
         allDatasets = os.environ['ALLDATASETS']
+        loss_param = [os.environ['W0'],os.environ['SIGMA']]
     except KeyError:
         k = 5
         toResume = 'True'
         normtype = 3
         allDatasets = 'True'
+        loss_param = ['10','5']
 
     print('Training K-fold ' + str(k) + ': Normalization type ' + str(normtype))
 
@@ -109,7 +111,8 @@ def main():
 
     ## Instantiate Training and Validation DataLoaders
     trainDataSet = YeastSegmentationDataset(trainIDs, crop_size = 256, random_rotate = True, random_flip = False,
-                                            no_og_data = False, random_crop=False, normtype=normtype, setMoments = setMoments)
+                                            no_og_data = False, random_crop=False, normtype=normtype,
+                                            setMoments = setMoments, loss_param=loss_param)
     trainLoader = torch.utils.data.DataLoader(trainDataSet, batch_size=1,
                                             shuffle=True, num_workers=1)
 
