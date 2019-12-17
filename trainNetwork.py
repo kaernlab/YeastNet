@@ -33,19 +33,17 @@ def main():
         toResume = 'False'
         normtype = 3
         allDatasets = 'True'
-<<<<<<< HEAD
-        trainTwo = 'True'
-=======
         loss_param = ['10','5']
->>>>>>> 9504d4ff570659c5de4c72f32f73bb01df7e820a
+        trainTwo = 'True'
 
-    print('Training K-fold ' + str(k) + ': Normalization type ' + str(normtype))
+    #print('Training K-fold ' + str(k) + ': Normalization type ' + str(normtype))
+    print('Training with w0={}, sigma={}. Normalization type: {}'.format(loss_param[0], loss_param[1], normtype))
 
 
     ## Start Timer, Tensorboard
     start_time = time.time()
-    end = 10000
-    writer = SummaryWriter(comment='K_Fold' + str(k))#log_dir="./logs")
+    end = 2
+    writer = SummaryWriter(comment='_12test3,w0={},sigma={}'.format(loss_param[0], loss_param[1]))#log_dir="./logs")
 
     ## Instantiate Net, Load Parameters, Move Net to GPU
     net = Net()
@@ -77,29 +75,29 @@ def main():
         ## Intialize State
         iteration = 0
         start = 0
-        highestAccuracy = 0
-        testIDs = torch.load("./CrossValidation/testIDs.pt")[k-1]
-        trainIDs = torch.load("./CrossValidation/trainIDs.pt")[k-1]
+        highestAccuracy = 0 
+        #testIDs = torch.load("./CrossValidation/testIDs.pt")[k-1]
+        #trainIDs = torch.load("./CrossValidation/trainIDs.pt")[k-1]
 
-        if allDatasets == 'False':
-            testIDs.pop('YITDataset1', None)
-            testIDs.pop('YITDataset3', None)
-            trainIDs.pop('YITDataset1', None)
-            trainIDs.pop('YITDataset3', None)
+        #if allDatasets == 'False':
+        #    testIDs.pop('YITDataset1', None)
+        #    testIDs.pop('YITDataset3', None)
+        #    trainIDs.pop('YITDataset1', None)
+        #    trainIDs.pop('YITDataset3', None)
 
-        setMoments = getDatasetMoments(trainIDs)
+        #setMoments = getDatasetMoments(trainIDs)
 
         ## New two Dataset Training
         if trainTwo == 'True':
             trainIDs = {
                 'DSDataset': list(range(150)),
-                #'YITDataset1': list(range(60)),
-                'YITDataset3': list(range(20)),
+                'YITDataset1': list(range(60)),
+                #'YITDataset3': list(range(20)),
             }
             testIDs = {
                 #'DSDataset': list(range(150)),
-                'YITDataset1': list(range(60)),
-                #'YITDataset3': list(range(20)),
+                #'YITDataset1': list(range(60)),
+                'YITDataset3': list(range(20)),
             }
         trainSetMoments = getDatasetMoments(trainIDs)
         testSetMoments = getDatasetMoments(testIDs)
@@ -203,12 +201,16 @@ def main():
             #    outputpath ="./NewNormModels/new_norm_testDSV%01dK%01d.pt" % (normtype,k) 
             #else:
             #    outputpath ="./NewNormModels/new_norm_testV%01dK%01d.pt" % (normtype,k) 
-            outputpath = 'test13t2.pt'
+            
+            outputpath = '12test3_w0={}_sigma={}.pt'.format(loss_param[0], loss_param[1])
             torch.save(checkpoint, outputpath)
 
     ## Finish
     elapsed_time = time.time() - start_time
     print('Finished Training, Duration: seconds' + str(elapsed_time))
+    with open('ScreenOutput.txt','a') as outputfile:
+        outputfile.writelines('w0={},sigma={},accuracy={:.4f}\n'.format(loss_param[0], loss_param[1], 
+                                                                checkpoint['highestAccuracy']))
     writer.close()
 
 
