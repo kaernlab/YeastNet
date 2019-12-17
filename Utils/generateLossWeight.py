@@ -4,41 +4,30 @@ from scipy import ndimage
 import imageio
 import pdb
 import matplotlib.pyplot as plt
+import os
+from tqdm import tqdm
 
+# Produce Loss Matrix
+def getLossMatrix(imageID, dataset, w0 = 10, sigma = 10):
 
-def load_mask1(timepoint):
-    mask = sio.loadmat('./Training Data/Masks/mask%01d.mat' % timepoint)
-    cropped_mask = mask['LAB'][8:-8, 184:-184]
-    return cropped_mask
-
-def load_mask2(timepoint, dataset):
-    image = imageio.imread('./Datasets/' + dataset + '/Loss Weight Maps/mask%03d.tif' % timepoint)
-    #image = image[8:-8, 184:-184]
-    return image
-
-def getLossMatrix(imageID, dataset):
-
-    #gt = load_mask2(imageID, dataset)
-    gt = np.load('./Datasets/' + dataset + '/Masks/mask%03d.npy' % imageID)
+    # Load Ground Truth Mask
+    gt = np.load('../Datasets/' + dataset + '/Masks/mask%03d.npy' % imageID)
     gt2 = ~(gt==0)
     uvals=np.unique(gt2)
     wmp=np.zeros(uvals.shape)
 
     wmp = [1/np.sum(gt2==uvals[uv]) for uv in range(uvals.shape[0])]
-
+    
     wmp=wmp / np.max(wmp)
 
     wc=np.zeros(gt.shape)
     for uv in range(uvals.shape[0]):
         wc[gt2==uvals[uv]]=wmp[uv]
-    w0 = 10 
-    sigma = 10
 
     num_cells = np.max(gt)
 
     bwgt=np.zeros(gt.shape)
     maps=np.zeros((gt.shape[0],gt.shape[1],num_cells))
-    
     if num_cells>=2:
         for cellID in range(num_cells):
             maps[:,:,cellID]=ndimage.distance_transform_edt(~(gt == cellID+1))
@@ -46,26 +35,39 @@ def getLossMatrix(imageID, dataset):
         maps.sort(axis=2)
         d1=maps[:,:,0]
         d2=maps[:,:,1]
-
-        bwgt=w0 * np.exp((-(np.power((d1+d2),2))) / (2*sigma) ) * (gt==0)
+        bwgt = w0 * np.exp((-(np.power((d1+d2),2))) / np.power((2*sigma), 2)) * (gt==0)
         weight = wc + bwgt
-    #plt.imshow(bwgt)
-    #plt.show()
-    #plt.imshow(weight)
-    #plt.show()
-    #plt.imshow(wc)
-    #plt.show()
 
     return weight
 
-dataset = 'YITDataset3'
-timepoints = 20
-for idx in range(timepoints):
-    weight = getLossMatrix(idx, dataset)
-    np.save(('./Datasets/' + dataset + '/LossWeightMaps/lwm%03d' % idx), weight)
-    #image = np.load('./Datasets/' + dataset + '/Loss Weight Maps/lwm%01d.npy' % idx)
-    imageio.imwrite(('./Datasets/' + dataset + '/New/lwm%03d.png' % idx), weight)
 
-#for idx in list(range(153)):
-    #imageio.imwrite(('./Datasets/YITDataset3/New/mask%03d.tif' % idx), load_image(idx))
-#    np.save(('./Datasets/DSDataset/New/mask%03d' % idx), load_image(idx))
+if __name__ == "__main__":
+    ## Parameters
+    datasets = ['DSDataset','YITDataset1','YITDataset3']
+    dataset = datasets[0]
+    w0 = 20 # Absolute scaling
+    sigma = 10 # Higher means further pixels have greater weight
+    
+    ## Set Number of Timepoints in Dataset
+    if dataset == 'YITDataset3':
+        timepoints = 20
+    elif dataset == 'YITDataset1':
+        timepoints = 60
+    else:
+        timepoints = 51
+
+    folder_name1 = '../Datasets/' + dataset + '/LossWeightMaps/{}.{}'.format(w0,sigma)
+    if not os.path.exists(folder_name1):
+        os.mkdir(folder_name1)
+    folder_name2 = '../Datasets/' + dataset + '/LossWeightImages/{}.{}'.format(w0,sigma)
+    if not os.path.exists(folder_name2):
+        os.mkdir(folder_name2)
+
+    for idx in tqdm(range(timepoints)):
+        weight = getLossMatrix(idx, dataset, w0 = w0, sigma = sigma)
+        np.save(folder_name1 + '/lwm{:03d}'.format(idx), weight)
+        if dataset == 'DSDataset':
+            np.save(folder_name1 + '/lwm{:03d}'.format(idx+51), weight)
+            np.save(folder_name1 + '/lwm{:03d}'.format(idx+102), weight)
+
+        imageio.imwrite(folder_name2 + '/lwm{:03d}.png'.format(idx), np.uint8(weight))

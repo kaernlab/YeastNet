@@ -1,0 +1,21 @@
+name: yeastnet
+channels:
+  - pytorch
+  - defaults
+dependencies:
+  - cudatoolkit=10.1
+  - imageio
+  - ipython
+  - matplotlib
+  - numpy
+  - opencv
+  - pip
+  - pylint
+  - python=3.6.9
+  - scipy
+  - tensorboard
+  - torchvision
+  - tqdm
+
+
+
