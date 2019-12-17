@@ -192,6 +192,5 @@ def main():
     print('Finished Training, Duration: seconds' + str(elapsed_time))
     writer.close()
 
-
 if __name__ == '__main__':
     main()
