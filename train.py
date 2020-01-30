@@ -11,7 +11,7 @@ from torch import optim
 from torch.utils.tensorboard import SummaryWriter
 
 ## Import Custom Modules
-import ynetmodel.validateNetwork as validateNetwork
+from ynetmodel.detect import validate
 from Utils.helpers import getDatasetMoments
 
 ## Import Custom Classes
@@ -169,7 +169,7 @@ def main():
 
         ## Epoch validation
 
-        val_acc = validateNetwork.validate(net, device, testLoader, criterion, saveImages = False)
+        val_acc = validate(net, device, testLoader, criterion, saveImages = False)
         scheduler.step(val_acc)
         #print('Current LR is: ' + str(optimizer.param_groups['lr']))
         
@@ -216,6 +216,5 @@ def main():
         outputfile.writelines('w0={},sigma={},accuracy={:.4f}\n'.format(loss_param[0], loss_param[1], 
                                                                 checkpoint['highestAccuracy']))
     writer.close()
-
 if __name__ == '__main__':
     main()
