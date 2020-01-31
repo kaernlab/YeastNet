@@ -1,0 +1,25 @@
+data:
+  DSDataset_size: 150
+  YITDataset1_size: 60
+  YITDataset3_size: 20
+  loss_param:
+    - '10'
+    - '5'
+  trainingSets:
+    - DSDataset
+    - YITDataset1
+  testingSets: 
+    - YITDataset3
+
+train_param:
+  k: 5
+  toResume: 'False'
+  normtype: 3
+  allDatasets: 'True'
+  end: 1000
+  learning_rate: 0.01
+  momentum: 0.9
+
+model:
+  folderpath: ./SavedModels
+  modelname: test.pt
