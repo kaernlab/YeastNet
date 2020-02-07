@@ -1,6 +1,7 @@
 ## Import Librarys and Modules
 import torch
 import pdb
+import yaml
 import random
 import time
 import matplotlib.pyplot as plt
@@ -19,8 +20,9 @@ from ynetmodel.YeastSegmentationDataset import YeastSegmentationDataset
 def main():
 
     ## Print Name/Info about Model Training Session
-    print('Training with w0={}, sigma={}. Dataset: {}'.format(loss_param[0], loss_param[1], dataset),flush=True)
-
+    print('------------------------------------------------------')
+    print('|  Training with w0={}, sigma={}.\n|  Training Datasets: {}.\n|  Validation Datasets: {}'.format(loss_param[0], loss_param[1], trainingSets, testingSets),flush=True)
+    print('------------------------------------------------------')
     ## Start Timer, Tensorboard
     start_time = time.time()
     writer = SummaryWriter(comment='_12test3,w0={},sigma={}'.format(loss_param[0], loss_param[1]))#log_dir="./logs")
@@ -72,8 +74,8 @@ def main():
         #        #'YITDataset1': list(range(60)),
         #        'YITDataset3': list(range(20)),
         #    }
-        trainIDs = {dataset: torch.load('./Utils/TrainingSplits/trainIDs.pt')[dataset]}
-        testIDs = {dataset: torch.load('./Utils/TrainingSplits/testIDs.pt')[dataset]}
+        trainIDs = {dataset: torch.load('./Utils/TrainingSplits/trainIDs.pt')[dataset] for dataset in trainingSets}
+        testIDs = {dataset: torch.load('./Utils/TrainingSplits/testIDs.pt')[dataset] for dataset in testingSets}
 
     ## Get Statistics of datasets
     trainSetMoments = getDatasetMoments(trainIDs)
@@ -83,11 +85,11 @@ def main():
     if torch.cuda.device_count() > 1:
         net = torch.nn.DataParallel(net)
 
-    scheduler = optim.lr_scheduler.ReduceLROnPlateau(optimizer, 'min', factor=0.8, patience=50, verbose=True)
+    scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer, 'min', factor=0.8, patience=50, verbose=True)
 
     ## Instantiate Training and Validation DataLoaders
-    trainDataSet = YeastSegmentationDataset(trainIDs, crop_size = 256, random_rotate = True, random_flip = False,
-                                            no_og_data = False, random_crop=False,
+    trainDataSet = YeastSegmentationDataset(trainIDs, crop_size = 800, random_rotate = True, random_flip = False,
+                                            no_og_data = False, random_crop=True,
                                             setMoments = trainSetMoments, loss_param=loss_param)
     trainLoader = torch.utils.data.DataLoader(trainDataSet, batch_size=1,
                                             shuffle=True, num_workers=0)
@@ -132,7 +134,7 @@ def main():
 
         ## Epoch validation
 
-        val_acc = validate(net, device, testLoader, criterion, saveImages = False)
+        val_acc = validate(net, device, testLoader, criterion, saveImages = True)
         scheduler.step(val_acc)
         
         print('[%d, %d] IntOfUnion (Cell): %.5f \n' % (iteration, epoch + 1, val_acc),flush=True)
@@ -164,7 +166,7 @@ def main():
                 "highestAccuracy": val_acc,
             }
             
-            outputpath = '{}_w0={}_sigma={}.pt'.format(dataset, loss_param[0], loss_param[1])
+            outputpath = modelfolder + '{}_w0={}_sigma={}.pt'.format(trainingSets, loss_param[0], loss_param[1])
             torch.save(checkpoint, outputpath)
 
     ## Finish
@@ -186,20 +188,24 @@ if __name__ == '__main__':
         k = int(os.environ['K_FOLD'])
         toResume = os.environ['RESUME']
         normtype = os.environ['NORMTYPE']
-        allDatasets = os.environ['ALLDATASETS']
+        #allDatasets = os.environ['ALLDATASETS']
         loss_param = [os.environ['W0'],os.environ['SIGMA']]
         dataset = os.environ['DATASET']
     except KeyError:
-        allDatasets = settings['data']['allDatasets']
-        loss_param = settings['data']['loss_param']
         k = settings['train_param']['k']
         toResume = settings['train_param']['toResume']
         normtype = settings['train_param']['normtype']
+        #allDatasets = settings['data']['allDatasets']
+        loss_param = settings['data']['loss_param']
+        trainingSets = settings['data']['trainingSets']
+        testingSets = settings['data']['testingSets']
+        
 
-    loss_param = ['10','5'] if dataset == 'DSDataset' else ['5','5']
+    #loss_param = ['10','5'] if dataset == 'DSDataset' else ['5','5']
 
     end = settings['train_param']['end']
     lr = settings['train_param']['learning_rate']
     momentum = settings['train_param']['momentum']
+    modelfolder = settings['model']['folderpath']
 
     main()

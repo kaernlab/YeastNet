@@ -3,14 +3,15 @@ data:
   YITDataset1_size: 60
   YITDataset3_size: 20
   loss_param:
-    - '10'
-    - '5'
+    - '10' # w0
+    - '5'  # sigma
   trainingSets:
-    - DSDataset
-    - YITDataset1
+#    - DSDataset
+    - DSDataset2
+#    - YITDataset1
   testingSets: 
-    - YITDataset3
-
+#    - YITDataset3
+    - DSDataset2
 train_param:
   k: 5
   toResume: 'False'
@@ -21,5 +22,5 @@ train_param:
   momentum: 0.9
 
 model:
-  folderpath: ./SavedModels
+  folderpath: ./SavedModels/
   modelname: test.pt
