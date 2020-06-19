@@ -82,7 +82,6 @@ class YeastSegmentationDataset(Dataset):
 
         return setMoments
 
-
     def centerCrop(self, image, new_size):
         if torch.is_tensor(image):
             _,h,w = image.shape
