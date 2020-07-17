@@ -4,14 +4,13 @@ channels:
   - pytorch
   - defaults
 dependencies:
-  - cudatoolkit=10.1
+  - cudatoolkit=10.2
   - pytorch=1.5
   - imageio
   - ipython
   - matplotlib
   - numpy
   - opencv
-  - pip
   - flake8
   - python >=3.7
   - scipy
@@ -19,6 +18,4 @@ dependencies:
   - torchvision
   - tqdm
   - pyyaml
-
-  - pip:
-    - ax-platform
+  - scikit-image
