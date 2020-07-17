@@ -34,7 +34,8 @@ def labelCells(mask, bw_image):
     areas = []
     for idx in range(1,num_labels):
         single_label_mask = (labels==idx).astype(np.uint8)
-        _, contour, _ = cv2.findContours(single_label_mask, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
+        #_, contour, _ = cv2.findContours(single_label_mask, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
+        contour, _ = cv2.findContours(single_label_mask, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
         contours.append(contour)
         contouredImage = cv2.drawContours(bw_image, contour, -1, (0,0,1), 1)
         areas.append(single_label_mask.sum())
