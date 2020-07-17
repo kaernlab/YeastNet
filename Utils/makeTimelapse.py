@@ -6,7 +6,7 @@ import pickle
 import argparse
 import os
 
-from ynetmodel.inferNetwork import inferNetwork
+from ynetmodel.detect import infer
 from Utils.labelCells import labelCells
 from Utils.Timelapse import Timelapse
 
@@ -18,7 +18,7 @@ def makeTimelapse(imagedir, model_path, saveExp):
     tl.loadImages(normalize = True)
     
     # Pass Image to Inference script, return predicted Mask
-    predictions = inferNetwork(images = tl.tensorsBW, num_images = tl.num_images, device = device, model_path = model_path)
+    predictions = infer(images = tl.tensorsBW, num_images = tl.num_images, device = device, model_path = model_path)
     tl.makeMasks(predictions)
 
     # Make folder if doesnt exist

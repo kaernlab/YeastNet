@@ -15,10 +15,11 @@ args = parser.parse_args()
 datasetfolder = args.datasetfolder
 makePlots = args.make_plot
 saveExp = args.save_experiment
-model_path = './YeastNet2Param.pt'
+model_path = './Published/YNModelParams.pt'
 
 
-tl = makeTimelapse('./Images/' + datasetfolder + '/' , model_path, saveExp)
+#tl = makeTimelapse('./Images/' + datasetfolder + '/' , model_path, saveExp)
+tl = makeTimelapse('./Published/Images/Z2/', model_path, False)
 
 
 if makePlots:

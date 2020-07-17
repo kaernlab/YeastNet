@@ -5,12 +5,12 @@ import numpy as np
 import pdb
 ## Import Custom Code
 from Utils.helpers import accuracy
-from ynetmodel.defineNetwork import Net
+from ynetmodel.defineNetwork import NetOld
 
 
 def infer(images, num_images, device = "cpu", model_path = "./model_cp.pt"):
     ## Instantiate Net, load parameters
-    net = Net()
+    net = NetOld()
     net.eval()
     checkpoint = torch.load(model_path, map_location=device)
     net.load_state_dict(checkpoint['network'])
