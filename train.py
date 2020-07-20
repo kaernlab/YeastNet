@@ -52,10 +52,6 @@ def main():
         net.load_state_dict(checkpoint['network'])
         optimizer.load_state_dict(checkpoint['optimizer'])
 
-        ##Change Optimizer params
-        #for g in optimizer.param_groups:
-        #    g['lr'] = 0.05
-        #    g['momentum'] = 0.9
     else:
         ## Intialize State
         iteration = 0
@@ -74,8 +70,11 @@ def main():
         #        #'YITDataset1': list(range(60)),
         #        'YITDataset3': list(range(20)),
         #    }
-        trainIDs = {dataset: torch.load('./Utils/TrainingSplits/trainIDs.pt')[dataset] for dataset in trainingSets}
-        testIDs = {dataset: torch.load('./Utils/TrainingSplits/testIDs.pt')[dataset] for dataset in testingSets}
+        #trainIDs = {dataset: torch.load('./Utils/TrainingSplits/trainIDs.pt')[dataset] for dataset in trainingSets}
+        #testIDs = {dataset: torch.load('./Utils/TrainingSplits/testIDs.pt')[dataset] for dataset in testingSets}
+        trainIDs = {'DSDataset': list(range(150))}
+        testIDs = {'DSDataset': list(range(150))}
+
 
     ## Get Statistics of datasets
     trainSetMoments = getDatasetMoments(trainIDs)
@@ -88,8 +87,8 @@ def main():
     scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer, 'min', factor=0.8, patience=50, verbose=True)
 
     ## Instantiate Training and Validation DataLoaders
-    trainDataSet = YeastSegmentationDataset(trainIDs, crop_size = 800, random_rotate = True, random_flip = False,
-                                            no_og_data = False, random_crop=True,
+    trainDataSet = YeastSegmentationDataset(trainIDs, crop_size = crop_size, random_rotate = random_rotate, random_flip = random_flip,
+                                            no_og_data = no_og_data, random_crop=random_crop,
                                             setMoments = trainSetMoments, loss_param=loss_param)
     trainLoader = torch.utils.data.DataLoader(trainDataSet, batch_size=1,
                                             shuffle=True, num_workers=0)
@@ -166,7 +165,8 @@ def main():
                 "highestAccuracy": val_acc,
             }
             
-            outputpath = modelfolder + '{}_w0={}_sigma={}.pt'.format(trainingSets, loss_param[0], loss_param[1])
+            #outputpath = modelfolder + '{}_w0={}_sigma={}.pt'.format(trainingSets, loss_param[0], loss_param[1])
+            outputpath = modelfolder + modelname
             torch.save(checkpoint, outputpath)
 
     ## Finish
@@ -207,5 +207,11 @@ if __name__ == '__main__':
     lr = settings['train_param']['learning_rate']
     momentum = settings['train_param']['momentum']
     modelfolder = settings['model']['folderpath']
+    no_og_data = settings['train_param']['no_og_data']
+    random_flip = settings['train_param']['random_flip']
+    random_rotate = settings['train_param']['random_rotate']
+    random_crop = settings['train_param']['random_crop']
+    crop_size = settings['train_param']['crop_size']
+    batch_size = settings['train_param']['batch_size']
 
     main()

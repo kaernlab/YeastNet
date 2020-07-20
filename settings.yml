@@ -1,3 +1,6 @@
+exp_info:
+  TB_comment: 'no_og_data'
+
 data:
   DSDataset_size: 150
   YITDataset1_size: 60
@@ -6,12 +9,14 @@ data:
     - '10' # w0
     - '5'  # sigma
   trainingSets:
-#    - DSDataset
-    - DSDataset2
+    - DSDataset
+#    - DSDataset2
 #    - YITDataset1
   testingSets: 
+    - DSDataset
 #    - YITDataset3
-    - DSDataset2
+#    - DSDataset2
+
 train_param:
   k: 5
   toResume: 'False'
@@ -20,6 +25,12 @@ train_param:
   end: 1000
   learning_rate: 0.01
   momentum: 0.9
+  crop_size: 800
+  no_og_data: True
+  random_flip: True
+  random_rotate: True
+  random_crop: True
+  batch_size: 1
 
 model:
   folderpath: ./SavedModels/
