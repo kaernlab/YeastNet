@@ -13,11 +13,9 @@ YeastNet works best using a conda environment and has been tested on a win-64 sy
 
 Linux: ```conda env create -f environment.yml```
 
-PC: ```conda env create -f environmentPC.yml```
-
 2) Activate the new conda environment
 
-```conda activate yeast-net```
+```conda activate ynet```
 
 3) Download the model parameters and Images
 
