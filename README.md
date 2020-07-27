@@ -21,13 +21,13 @@ Linux: ```conda env create -f environment.yml```
 
 4) Navigate to the folder containing the BrightField Images and run the Tracking Pipeline
 
-```python .\trackingPipeline.py -f 'Z2' -p True```
+```python .\track.py -f 'Z2' -p True```
 
 ## Details
 
 Options for the trackingPipeline are available using the command:
 
-```python trackingPipeline --help```
+```python track --help```
 
 Bright Field Images by default should be in the path "./Images/BF/."
 GFP Images should by default should be in the path "./Images/GFP/."
