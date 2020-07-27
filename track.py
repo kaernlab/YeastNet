@@ -18,8 +18,8 @@ saveExp = args.save_experiment
 model_path = './Published/YNModelParams.pt'
 
 
-#tl = makeTimelapse('./Images/' + datasetfolder + '/' , model_path, saveExp)
-tl = makeTimelapse('./Published/Images/Z2/', model_path, False)
+tl = makeTimelapse('./Images/' + datasetfolder + '/' , model_path, saveExp)
+#tl = makeTimelapse('./Published/Images/Z2/', model_path, False)
 
 
 if makePlots:
